@@ -6,144 +6,108 @@
     <title>Diferencias Divididas - Métodos Numéricos</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-        .method-selector {
+        .back-button {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background-color: #333;
+            color: white;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+
+        .section {
             background: white;
-            border-radius: 10px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            border: 1px solid #999;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            margin-bottom: 15px;
+            font-size: 1.3rem;
         }
 
         .method-options {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
         }
 
         .option-label {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 10px;
             cursor: pointer;
-            padding: 1rem;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            transition: all 0.3s ease;
-        }
-
-        .option-label:hover {
-            border-color: #667eea;
-            background-color: #f5f5f5;
+            padding: 10px;
+            border: 1px solid #999;
         }
 
         .option-label input[type="radio"] {
             cursor: pointer;
-            width: 20px;
-            height: 20px;
-        }
-
-        .input-section {
-            background: white;
-            border-radius: 10px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 15px;
         }
 
-        label {
+        .form-group label {
             display: block;
-            margin-bottom: 0.5rem;
-            color: #333;
-            font-weight: 500;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group small {
+            display: block;
+            color: #666;
+            font-size: 0.85rem;
+            margin-top: 3px;
         }
 
         input[type="text"],
-        input[type="number"],
-        textarea {
+        input[type="number"] {
             width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            padding: 8px;
+            border: 1px solid #999;
             font-size: 1rem;
             font-family: monospace;
         }
 
-        textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
         .button-group {
             display: flex;
-            gap: 1rem;
-            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
         }
 
         button {
-            padding: 0.8rem 2rem;
+            padding: 10px 20px;
             border: none;
-            border-radius: 5px;
             cursor: pointer;
             font-size: 1rem;
-            font-weight: 500;
-            transition: opacity 0.3s ease;
         }
 
         .btn-calcular {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: #333;
             color: white;
-        }
-
-        .btn-calcular:hover {
-            opacity: 0.9;
         }
 
         .btn-limpiar {
-            background: #e0e0e0;
-            color: #333;
-        }
-
-        .btn-limpiar:hover {
-            background: #d0d0d0;
-        }
-
-        .back-button {
-            display: inline-block;
-            margin-bottom: 2rem;
-            padding: 0.6rem 1.5rem;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: background 0.3s ease;
-        }
-
-        .back-button:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background-color: #ccc;
+            color: #000;
         }
 
         .results {
-            background: white;
-            border-radius: 10px;
-            padding: 2rem;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
             display: none;
         }
 
         .results.show {
             display: block;
-            animation: slideIn 0.3s ease;
         }
 
         .result-item {
-            margin-bottom: 1.5rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid #eee;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #999;
         }
 
         .result-item:last-child {
@@ -151,15 +115,14 @@
         }
 
         .result-label {
-            color: #667eea;
             font-weight: bold;
-            margin-bottom: 0.5rem;
+            margin-bottom: 5px;
         }
 
         .result-value {
-            background: #f5f5f5;
-            padding: 1rem;
-            border-radius: 5px;
+            background-color: #eee;
+            padding: 10px;
+            border: 1px solid #999;
             word-break: break-all;
             font-family: monospace;
         }
@@ -167,47 +130,33 @@
         .tabla {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 1rem;
+            margin-top: 10px;
+            font-size: 0.9rem;
         }
 
         .tabla th,
         .tabla td {
-            border: 1px solid #ddd;
-            padding: 0.75rem;
+            border: 1px solid #999;
+            padding: 8px;
             text-align: center;
         }
 
         .tabla th {
-            background: #667eea;
-            color: white;
-        }
-
-        .tabla tr:nth-child(even) {
-            background: #f9f9f9;
+            background-color: #ddd;
+            font-weight: bold;
         }
 
         .error {
-            background: #fee;
+            background-color: #fee;
             color: #c33;
-            padding: 1rem;
-            border-radius: 5px;
-            margin-top: 1rem;
+            padding: 10px;
+            border: 1px solid #c99;
+            margin-top: 15px;
             display: none;
         }
 
         .error.show {
             display: block;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
     </style>
 </head>
@@ -222,7 +171,7 @@
         <a href="/" class="back-button">← Volver</a>
 
         <!-- Selector de Método -->
-        <div class="method-selector">
+        <div class="section">
             <h2>Selecciona un Método</h2>
             <div class="method-options">
                 <label class="option-label">
@@ -241,7 +190,7 @@
         </div>
 
         <!-- Sección de Entrada -->
-        <div class="input-section">
+        <div class="section">
             <h2>Ingresa los Datos</h2>
             <form id="formulario">
                 <div class="form-group">
@@ -288,7 +237,7 @@
         </div>
 
         <!-- Sección de Resultados -->
-        <div id="resultados" class="results">
+        <div id="resultados" class="section results">
             <h2>Resultados</h2>
             
             <div class="result-item">
@@ -394,17 +343,11 @@
         });
 
         function mostrarResultados(datos) {
-            // Llenar resultados
-            document.getElementById('resultado-metodo').textContent = datos.detalles.metodo;
-            document.getElementById('resultado-nodos-x').textContent = datos.detalles.nodos_x.join(', ');
-            document.getElementById('resultado-nodos-y').textContent = datos.detalles.nodos_y.join(', ');
-            document.getElementById('resultado-punto').textContent = datos.detalles.punto_evaluacion;
-            document.getElementById('resultado-valor').textContent = datos.resultado.toFixed(10);
-
-            // Llenar tabla de diferencias
+            // Limpiar tabla anterior
             const tabla = document.getElementById('tabla-diferencias');
             tabla.innerHTML = '';
 
+            // Llenar tabla de diferencias
             const tablaDatos = datos.detalles.tabla_diferencias;
             const n = tablaDatos.length;
 
@@ -421,6 +364,60 @@
             const tbody = tabla.createTBody();
             for (let i = 0; i < n; i++) {
                 const row = tbody.insertRow();
+                for (let j = 0; j < n - i; j++) {
+                    const cell = row.insertCell();
+                    const valor = tablaDatos[i][j];
+                    cell.textContent = typeof valor === 'number' ? valor.toFixed(6) : '';
+                }
+            }
+
+            // Construir HTML de resultados
+            let html = '<h2>Resultados</h2>';
+            html += '<div class="result-item">';
+            html += '<div class="result-label">Método Utilizado:</div>';
+            html += '<div class="result-value">' + datos.detalles.metodo + '</div>';
+            html += '</div>';
+
+            html += '<div class="result-item">';
+            html += '<div class="result-label">Nodos X:</div>';
+            html += '<div class="result-value">' + datos.detalles.nodos_x.join(', ') + '</div>';
+            html += '</div>';
+
+            html += '<div class="result-item">';
+            html += '<div class="result-label">Nodos Y:</div>';
+            html += '<div class="result-value">' + datos.detalles.nodos_y.join(', ') + '</div>';
+            html += '</div>';
+
+            html += '<div class="result-item">';
+            html += '<div class="result-label">Punto de Evaluación:</div>';
+            html += '<div class="result-value">' + datos.detalles.punto_evaluacion + '</div>';
+            html += '</div>';
+
+            html += '<div class="result-item">';
+            html += '<div class="result-label">Valor Interpolado:</div>';
+            html += '<div class="result-value">' + datos.resultado.toFixed(10) + '</div>';
+            html += '</div>';
+
+            html += '<div class="result-item">';
+            html += '<div class="result-label">Tabla de Diferencias:</div>';
+            html += '<table class="tabla" id="tabla-diferencias"></table>';
+            html += '</div>';
+
+            resultadosDiv.innerHTML = html;
+            
+            // Recrear tabla después de actualizar HTML
+            const nuevaTabla = document.getElementById('tabla-diferencias');
+            const thead2 = nuevaTabla.createTHead();
+            const headerRow2 = thead2.insertRow();
+            for (let j = 0; j < n; j++) {
+                const th = document.createElement('th');
+                th.textContent = `D${j}`;
+                headerRow2.appendChild(th);
+            }
+
+            const tbody2 = nuevaTabla.createTBody();
+            for (let i = 0; i < n; i++) {
+                const row = tbody2.insertRow();
                 for (let j = 0; j < n - i; j++) {
                     const cell = row.insertCell();
                     const valor = tablaDatos[i][j];
