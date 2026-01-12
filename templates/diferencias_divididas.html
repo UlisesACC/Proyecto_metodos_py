@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diferencias Divididas - Métodos Numéricos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .method-selector {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .method-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            padding: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .option-label:hover {
+            border-color: #667eea;
+            background-color: #f5f5f5;
+        }
+
+        .option-label input[type="radio"] {
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+        }
+
+        .input-section {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-family: monospace;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        button {
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: opacity 0.3s ease;
+        }
+
+        .btn-calcular {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-calcular:hover {
+            opacity: 0.9;
+        }
+
+        .btn-limpiar {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-limpiar:hover {
+            background: #d0d0d0;
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-bottom: 2rem;
+            padding: 0.6rem 1.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .results {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        .result-item {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-value {
+            background: #f5f5f5;
+            padding: 1rem;
+            border-radius: 5px;
+            word-break: break-all;
+            font-family: monospace;
+        }
+
+        .tabla {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .tabla th,
+        .tabla td {
+            border: 1px solid #ddd;
+            padding: 0.75rem;
+            text-align: center;
+        }
+
+        .tabla th {
+            background: #667eea;
+            color: white;
+        }
+
+        .tabla tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1>Diferencias Divididas</h1>
+        </div>
+    </nav>
+
+    <main class="container">
+        <a href="/" class="back-button">← Volver</a>
+
+        <!-- Selector de Método -->
+        <div class="method-selector">
+            <h2>Selecciona un Método</h2>
+            <div class="method-options">
+                <label class="option-label">
+                    <input type="radio" name="metodo" value="adelante" checked>
+                    <span>Diferencias Hacia Adelante</span>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="metodo" value="atras">
+                    <span>Diferencias Hacia Atrás</span>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="metodo" value="neville">
+                    <span>Neville</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Sección de Entrada -->
+        <div class="input-section">
+            <h2>Ingresa los Datos</h2>
+            <form id="formulario">
+                <div class="form-group">
+                    <label for="nodos_x">Nodos X (separados por comas)</label>
+                    <input 
+                        type="text" 
+                        id="nodos_x" 
+                        placeholder="ej: 1, 2, 3, 4"
+                        required
+                    >
+                    <small>Ingresa los valores x separados por comas</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="nodos_y">Nodos Y (separados por comas)</label>
+                    <input 
+                        type="text" 
+                        id="nodos_y" 
+                        placeholder="ej: 1, 4, 9, 16"
+                        required
+                    >
+                    <small>Ingresa los valores y separados por comas</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="punto_eval">Punto a Evaluar (X)</label>
+                    <input 
+                        type="number" 
+                        id="punto_eval" 
+                        placeholder="ej: 2.5"
+                        step="0.01"
+                        required
+                    >
+                    <small>Ingresa el punto donde deseas evaluar la interpolación</small>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn-calcular">Calcular</button>
+                    <button type="reset" class="btn-limpiar">Limpiar</button>
+                </div>
+            </form>
+
+            <div id="error" class="error"></div>
+        </div>
+
+        <!-- Sección de Resultados -->
+        <div id="resultados" class="results">
+            <h2>Resultados</h2>
+            
+            <div class="result-item">
+                <div class="result-label">Método Utilizado:</div>
+                <div class="result-value" id="resultado-metodo"></div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-label">Nodos X:</div>
+                <div class="result-value" id="resultado-nodos-x"></div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-label">Nodos Y:</div>
+                <div class="result-value" id="resultado-nodos-y"></div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-label">Punto de Evaluación:</div>
+                <div class="result-value" id="resultado-punto"></div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-label">Valor Interpolado:</div>
+                <div class="result-value" id="resultado-valor" style="font-size: 1.5rem; color: #667eea;"></div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-label">Tabla de Diferencias:</div>
+                <table class="tabla" id="tabla-diferencias"></table>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 App de Métodos Numéricos - ESCOM</p>
+    </footer>
+
+    <script>
+        const formulario = document.getElementById('formulario');
+        const errorDiv = document.getElementById('error');
+        const resultadosDiv = document.getElementById('resultados');
+
+        formulario.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Obtener valores del formulario
+            const metodo = document.querySelector('input[name="metodo"]:checked').value;
+            const nodosXStr = document.getElementById('nodos_x').value.trim();
+            const nodosYStr = document.getElementById('nodos_y').value.trim();
+            const puntoEval = parseFloat(document.getElementById('punto_eval').value);
+
+            // Limpiar errores previos
+            errorDiv.classList.remove('show');
+            errorDiv.textContent = '';
+
+            try {
+                // Parsear nodos
+                const nodosX = nodosXStr.split(',').map(v => parseFloat(v.trim()));
+                const nodosY = nodosYStr.split(',').map(v => parseFloat(v.trim()));
+
+                // Validar entrada
+                if (nodosX.some(isNaN) || nodosY.some(isNaN)) {
+                    throw new Error('Los nodos deben ser números válidos');
+                }
+                if (nodosX.length !== nodosY.length) {
+                    throw new Error('Los nodos X e Y deben tener la misma cantidad de elementos');
+                }
+                if (nodosX.length < 2) {
+                    throw new Error('Se necesitan al menos 2 puntos para interpolar');
+                }
+                if (isNaN(puntoEval)) {
+                    throw new Error('El punto de evaluación debe ser un número válido');
+                }
+
+                // Enviar al servidor
+                const response = await fetch('/api/diferencias-divididas', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        metodo: metodo,
+                        nodos_x: nodosX,
+                        nodos_y: nodosY,
+                        punto_eval: puntoEval
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error en el servidor');
+                }
+
+                const data = await response.json();
+                mostrarResultados(data);
+
+            } catch (error) {
+                errorDiv.textContent = '❌ ' + error.message;
+                errorDiv.classList.add('show');
+                resultadosDiv.classList.remove('show');
+            }
+        });
+
+        function mostrarResultados(datos) {
+            // Llenar resultados
+            document.getElementById('resultado-metodo').textContent = datos.detalles.metodo;
+            document.getElementById('resultado-nodos-x').textContent = datos.detalles.nodos_x.join(', ');
+            document.getElementById('resultado-nodos-y').textContent = datos.detalles.nodos_y.join(', ');
+            document.getElementById('resultado-punto').textContent = datos.detalles.punto_evaluacion;
+            document.getElementById('resultado-valor').textContent = datos.resultado.toFixed(10);
+
+            // Llenar tabla de diferencias
+            const tabla = document.getElementById('tabla-diferencias');
+            tabla.innerHTML = '';
+
+            const tablaDatos = datos.detalles.tabla_diferencias;
+            const n = tablaDatos.length;
+
+            // Encabezado
+            const thead = tabla.createTHead();
+            const headerRow = thead.insertRow();
+            for (let j = 0; j < n; j++) {
+                const th = document.createElement('th');
+                th.textContent = `D${j}`;
+                headerRow.appendChild(th);
+            }
+
+            // Cuerpo
+            const tbody = tabla.createTBody();
+            for (let i = 0; i < n; i++) {
+                const row = tbody.insertRow();
+                for (let j = 0; j < n - i; j++) {
+                    const cell = row.insertCell();
+                    const valor = tablaDatos[i][j];
+                    cell.textContent = typeof valor === 'number' ? valor.toFixed(6) : '';
+                }
+            }
+
+            // Mostrar resultados
+            resultadosDiv.classList.add('show');
+        }
+    </script>
+</body>
+</html>

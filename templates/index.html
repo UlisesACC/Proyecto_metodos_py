@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Métodos Numéricos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1>Métodos Numéricos</h1>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section class="welcome">
+            <h2>Bienvenido a la Aplicación de Métodos Numéricos</h2>
+            <p>Esta aplicación permite realizar cálculos y análisis utilizando diferentes métodos numéricos.</p>
+        </section>
+
+        <section class="methods-grid">
+            <div class="method-card">
+                <h3>Bisección</h3>
+                <p>Encuentra raíces de ecuaciones mediante división de intervalos.</p>
+                <button onclick="alert('En desarrollo')">Acceder</button>
+            </div>
+
+            <div class="method-card">
+                <h3>Newton-Raphson</h3>
+                <p>Método iterativo para encontrar raíces con convergencia cuadrática.</p>
+                <button onclick="alert('En desarrollo')">Acceder</button>
+            </div>
+
+            <div class="method-card">
+                <h3>Diferencias Divididas</h3>
+                <p>Interpolación usando adelante, atrás y Neville.</p>
+                <button onclick="window.location.href='/diferencias-divididas'">Acceder</button>
+            </div>
+
+            <div class="method-card">
+                <h3>Integración Numérica</h3>
+                <p>Calcula integrales definidas numéricamente.</p>
+                <button onclick="alert('En desarrollo')">Acceder</button>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 App de Métodos Numéricos - ESCOM</p>
+    </footer>
+
+    <script>
+        // Verificar estado de la API
+        fetch('/api/health')
+            .then(response => response.json())
+            .then(data => console.log('API Status:', data))
+            .catch(error => console.error('Error:', error));
+    </script>
+</body>
+</html>
