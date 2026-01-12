@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistemas de Ecuaciones Lineales - Métodos Numéricos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        .back-button {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background-color: #333;
+            color: white;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+
+        .section {
+            background: white;
+            border: 1px solid #999;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .accordion {
+            border: 1px solid #999;
+        }
+
+        .accordion-item {
+            border-bottom: 1px solid #999;
+        }
+
+        .accordion-item:last-child {
+            border-bottom: none;
+        }
+
+        .accordion-header {
+            background-color: #f5f5f5;
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .accordion-header:hover {
+            background-color: #efefef;
+        }
+
+        .accordion-header.active {
+            background-color: #ddd;
+        }
+
+        .accordion-header::after {
+            content: '▼';
+            font-size: 0.8rem;
+        }
+
+        .accordion-header.active::after {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            display: none;
+            padding: 15px;
+            background-color: white;
+        }
+
+        .accordion-content.show {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group small {
+            display: block;
+            color: #666;
+            font-size: 0.85rem;
+            margin-top: 3px;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #999;
+            font-size: 1rem;
+            font-family: monospace;
+            box-sizing: border-box;
+        }
+
+        .matrix-container {
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+        }
+
+        .matrix-row {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .matrix-input {
+            width: 60px;
+            padding: 6px;
+            border: 1px solid #999;
+            font-size: 0.9rem;
+            font-family: monospace;
+        }
+
+        .matrix-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .matrix-controls button {
+            padding: 8px 12px;
+            background-color: #ddd;
+            border: 1px solid #999;
+            cursor: pointer;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-calcular {
+            background-color: #333;
+            color: white;
+        }
+
+        .btn-limpiar {
+            background-color: #ccc;
+            color: #000;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .result-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #999;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .result-value {
+            background-color: #eee;
+            padding: 10px;
+            border: 1px solid #999;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .tabla {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+
+        .tabla th,
+        .tabla td {
+            border: 1px solid #999;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .tabla th {
+            background-color: #ddd;
+            font-weight: bold;
+        }
+
+        .error {
+            background-color: #fee;
+            color: #c33;
+            padding: 10px;
+            border: 1px solid #c99;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1>Sistemas de Ecuaciones Lineales</h1>
+        </div>
+    </nav>
+
+    <main class="container">
+        <a href="/" class="back-button">← Volver</a>
+
+        <!-- Selector de Método -->
+        <div class="section">
+            <h2>Selecciona un Método</h2>
+            <div class="accordion">
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Eliminación Gaussiana</span>
+                    </button>
+                    <div class="accordion-content">
+                        <div style="margin-bottom: 10px;">
+                            <input type="radio" name="metodo" value="gaussiana_simple" id="opt_gaussiana_simple" checked>
+                            <label for="opt_gaussiana_simple">Eliminación Gaussiana Simple</label>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <input type="radio" name="metodo" value="gaussiana_parcial" id="opt_gaussiana_parcial">
+                            <label for="opt_gaussiana_parcial">Pivoteo Parcial</label>
+                        </div>
+                        <div>
+                            <input type="radio" name="metodo" value="gaussiana_total" id="opt_gaussiana_total">
+                            <label for="opt_gaussiana_total">Pivoteo Total</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Factorización de Matrices</span>
+                    </button>
+                    <div class="accordion-content">
+                        <div style="margin-bottom: 10px;">
+                            <input type="radio" name="metodo" value="lu" id="opt_lu">
+                            <label for="opt_lu">Factorización LU</label>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <input type="radio" name="metodo" value="plu" id="opt_plu">
+                            <label for="opt_plu">Factorización PLU</label>
+                        </div>
+                        <div>
+                            <input type="radio" name="metodo" value="llt" id="opt_llt">
+                            <label for="opt_llt">Factorización LLT (Cholesky)</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de Entrada -->
+        <div class="section">
+            <h2>Ingresa los Datos</h2>
+            <form id="formulario">
+                <div class="form-group">
+                    <label>Tamaño de la Matriz (n × n)</label>
+                    <input type="number" id="tamano" min="2" max="10" value="3" placeholder="3">
+                    <small>Ingresa el tamaño de la matriz (máximo 10)</small>
+                </div>
+
+                <button type="button" onclick="generarMatriz()" class="btn-limpiar" style="margin-bottom: 15px;">
+                    Generar Matriz
+                </button>
+
+                <div id="matrizContainer"></div>
+
+                <div class="form-group">
+                    <label>Vector b (términos independientes)</label>
+                    <div id="vectorbContainer"></div>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn-calcular">Calcular</button>
+                    <button type="reset" class="btn-limpiar">Limpiar</button>
+                </div>
+            </form>
+
+            <div id="error" class="error"></div>
+        </div>
+
+        <!-- Sección de Resultados -->
+        <div id="resultados" class="section results">
+            <h2>Resultados</h2>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 App de Métodos Numéricos - ESCOM</p>
+    </footer>
+
+    <script>
+        function toggleAccordion(button) {
+            const content = button.nextElementSibling;
+            button.classList.toggle('active');
+            content.classList.toggle('show');
+        }
+
+        function generarMatriz() {
+            const tamano = parseInt(document.getElementById('tamano').value);
+            
+            if (tamano < 2 || tamano > 10 || isNaN(tamano)) {
+                alert('Ingresa un tamaño válido entre 2 y 10');
+                return;
+            }
+
+            let html = '<table class="tabla"><tbody>';
+            for (let i = 0; i < tamano; i++) {
+                html += '<tr>';
+                for (let j = 0; j < tamano; j++) {
+                    html += `<td><input type="number" class="matrix-input" id="a_${i}_${j}" value="0" step="0.01"></td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+            
+            document.getElementById('matrizContainer').innerHTML = html;
+
+            let htmlb = '<div class="matrix-row">';
+            for (let i = 0; i < tamano; i++) {
+                htmlb += `<input type="number" class="matrix-input" id="b_${i}" value="0" step="0.01">`;
+            }
+            htmlb += '</div>';
+            
+            document.getElementById('vectorbContainer').innerHTML = htmlb;
+        }
+
+        // Generar matriz inicial
+        generarMatriz();
+
+        const formulario = document.getElementById('formulario');
+        const errorDiv = document.getElementById('error');
+        const resultadosDiv = document.getElementById('resultados');
+
+        formulario.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const metodo = document.querySelector('input[name="metodo"]:checked').value;
+            const tamano = parseInt(document.getElementById('tamano').value);
+            
+            let matriz_A = [];
+            let vector_b = [];
+
+            // Leer matriz
+            try {
+                for (let i = 0; i < tamano; i++) {
+                    let fila = [];
+                    for (let j = 0; j < tamano; j++) {
+                        const val = parseFloat(document.getElementById(`a_${i}_${j}`).value);
+                        if (isNaN(val)) throw new Error('Valores inválidos en la matriz');
+                        fila.push(val);
+                    }
+                    matriz_A.push(fila);
+                }
+
+                for (let i = 0; i < tamano; i++) {
+                    const val = parseFloat(document.getElementById(`b_${i}`).value);
+                    if (isNaN(val)) throw new Error('Valores inválidos en b');
+                    vector_b.push(val);
+                }
+            } catch (error) {
+                errorDiv.textContent = '❌ ' + error.message;
+                errorDiv.classList.add('show');
+                return;
+            }
+
+            errorDiv.classList.remove('show');
+            errorDiv.textContent = '';
+
+            try {
+                const response = await fetch('/api/sistemas-lineales', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        metodo: metodo,
+                        matriz_A: matriz_A,
+                        vector_b: vector_b
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error en el servidor');
+                }
+
+                const data = await response.json();
+                mostrarResultados(data, metodo);
+
+            } catch (error) {
+                errorDiv.textContent = '❌ ' + error.message;
+                errorDiv.classList.add('show');
+                resultadosDiv.classList.remove('show');
+            }
+        });
+
+        function mostrarResultados(datos, metodo) {
+            let html = '';
+
+            if (metodo.includes('gaussiana')) {
+                html += '<div class="result-item">';
+                html += '<div class="result-label">Solución:</div>';
+                html += '<div class="result-value">[' + datos.solucion.map(v => v.toFixed(6)).join(', ') + ']</div>';
+                html += '</div>';
+
+                html += '<div class="result-item">';
+                html += '<div class="result-label">Determinante:</div>';
+                html += '<div class="result-value">' + datos.detalles.determinante.toFixed(6) + '</div>';
+                html += '</div>';
+
+                html += '<div class="result-item">';
+                html += '<div class="result-label">Número de Condición:</div>';
+                html += '<div class="result-value">' + datos.detalles.numero_condicion.toFixed(6) + '</div>';
+                html += '</div>';
+            } else if (metodo === 'lu') {
+                html += '<div class="result-item">';
+                html += '<div class="result-label">Matriz L:</div>';
+                html += generarTablaMatriz(datos.L);
+                html += '</div>';
+
+                html += '<div class="result-item">';
+                html += '<div class="result-label">Matriz U:</div>';
+                html += generarTablaMatriz(datos.U);
+                html += '</div>';
+
+                html += '<div class="result-item">';
+                html += '<div class="result-label">Verificación LU = A:</div>';
+                html += '<div class="result-value">' + (datos.detalles.verificacion ? '✓ Correcto' : '✗ Error') + '</div>';
+                html += '</div>';
+            } else if (metodo === 'plu') {
+                html += '<div class="result-item">';
+                html += '<div class="result-label">Matriz P:</div>';
+                html += generarTablaMatriz(datos.P);
+                html += '</div>';
+
+                html += '<div class="result-item">';
+                html += '<div class="result-label">Matriz L:</div>';
+                html += generarTablaMatriz(datos.L);
+                html += '</div>';
+
+                html += '<div class="result-item">';
+                html += '<div class="result-label">Matriz U:</div>';
+                html += generarTablaMatriz(datos.U);
+                html += '</div>';
+
+                html += '<div class="result-item">';
+                html += '<div class="result-label">Verificación PLU = A:</div>';
+                html += '<div class="result-value">' + (datos.detalles.verificacion ? '✓ Correcto' : '✗ Error') + '</div>';
+                html += '</div>';
+            } else if (metodo === 'llt') {
+                html += '<div class="result-item">';
+                html += '<div class="result-label">Matriz L (Cholesky):</div>';
+                html += generarTablaMatriz(datos.L);
+                html += '</div>';
+
+                html += '<div class="result-item">';
+                html += '<div class="result-label">Verificación LL^T = A:</div>';
+                html += '<div class="result-value">' + (datos.detalles.verificacion ? '✓ Correcto' : '✗ Error') + '</div>';
+                html += '</div>';
+            }
+
+            resultadosDiv.innerHTML = '<h2>Resultados</h2>' + html;
+            resultadosDiv.classList.add('show');
+        }
+
+        function generarTablaMatriz(matriz) {
+            let html = '<table class="tabla"><tbody>';
+            for (let fila of matriz) {
+                html += '<tr>';
+                for (let val of fila) {
+                    html += '<td>' + val.toFixed(6) + '</td>';
+                }
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+            return html;
+        }
+    </script>
+</body>
+</html>

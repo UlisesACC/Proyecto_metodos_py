@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import numpy as np
-from metodos.metodos import DiferenciasFinitas, Derivacion, Integracion
+from metodos.metodos import DiferenciasFinitas, Derivacion, Integracion, SistemasLineales, EcuacionesDiferenciales
 
 app = Flask(__name__)
 
@@ -23,6 +23,16 @@ def derivacion():
 def integracion():
     """Página de integración numérica"""
     return render_template('integracion.html')
+
+@app.route('/sistemas-lineales')
+def sistemas_lineales():
+    """Página de sistemas de ecuaciones lineales"""
+    return render_template('sistemas_lineales.html')
+
+@app.route('/ecuaciones-diferenciales')
+def ecuaciones_diferenciales():
+    """Página de ecuaciones diferenciales"""
+    return render_template('ecuaciones_diferenciales.html')
 
 @app.route('/api/health', methods=['GET'])
 def health():
@@ -201,6 +211,140 @@ def api_integracion():
         return jsonify({
             'resultado': resultado,
             'detalles': detalles
+        }), 200
+    
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': f'Error en el cálculo: {str(e)}'}), 500
+
+@app.route('/api/sistemas-lineales', methods=['POST'])
+def api_sistemas_lineales():
+    """API para resolver sistemas de ecuaciones lineales"""
+    try:
+        datos = request.get_json()
+        
+        if not datos:
+            return jsonify({'error': 'No se recibieron datos'}), 400
+        
+        metodo = datos.get('metodo')
+        matriz_A = datos.get('matriz_A')
+        vector_b = datos.get('vector_b')
+        
+        if not all([metodo, matriz_A, vector_b]):
+            return jsonify({'error': 'Faltan campos requeridos'}), 400
+        
+        try:
+            matriz_A = [[float(x) for x in fila] for fila in matriz_A]
+            vector_b = [float(x) for x in vector_b]
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Datos inválidos'}), 400
+        
+        if metodo == 'gaussiana_simple':
+            solucion, detalles = SistemasLineales.eliminacion_gaussiana_simple(matriz_A, vector_b)
+        elif metodo == 'gaussiana_parcial':
+            solucion, detalles = SistemasLineales.eliminacion_gaussiana_pivoteo_parcial(matriz_A, vector_b)
+        elif metodo == 'gaussiana_total':
+            solucion, detalles = SistemasLineales.eliminacion_gaussiana_pivoteo_total(matriz_A, vector_b)
+        elif metodo == 'lu':
+            L, U, detalles = SistemasLineales.factorizacion_lu(matriz_A)
+            return jsonify({
+                'L': L,
+                'U': U,
+                'detalles': detalles
+            }), 200
+        elif metodo == 'plu':
+            P, L, U, detalles = SistemasLineales.factorizacion_plu(matriz_A)
+            return jsonify({
+                'P': P,
+                'L': L,
+                'U': U,
+                'detalles': detalles
+            }), 200
+        elif metodo == 'llt':
+            L, detalles = SistemasLineales.factorizacion_llt(matriz_A)
+            return jsonify({
+                'L': L,
+                'detalles': detalles
+            }), 200
+        else:
+            return jsonify({'error': 'Método no válido'}), 400
+        
+        return jsonify({
+            'solucion': solucion,
+            'detalles': detalles
+        }), 200
+    
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': f'Error en el cálculo: {str(e)}'}), 500
+
+@app.route('/api/ecuaciones-diferenciales', methods=['POST'])
+def api_ecuaciones_diferenciales():
+    """API para resolver ecuaciones diferenciales"""
+    try:
+        datos = request.get_json()
+        
+        if not datos:
+            return jsonify({'error': 'No se recibieron datos'}), 400
+        
+        metodo = datos.get('metodo')
+        x0 = datos.get('x0')
+        y0 = datos.get('y0')
+        xf = datos.get('xf')
+        n = datos.get('n')
+        f_expr = datos.get('f_expr')
+        
+        if not all([metodo, x0 is not None, y0 is not None, xf is not None, n, f_expr]):
+            return jsonify({'error': 'Faltan campos requeridos'}), 400
+        
+        try:
+            x0 = float(x0)
+            y0 = float(y0)
+            xf = float(xf)
+            n = int(n)
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Datos inválidos'}), 400
+        
+        if metodo == 'euler':
+            x_vals, y_vals, detalles = EcuacionesDiferenciales.euler(x0, y0, xf, n, f_expr)
+        elif metodo == 'taylor_2':
+            df_expr = datos.get('df_expr')
+            if not df_expr:
+                return jsonify({'error': 'Se requiere df_expr para Taylor orden 2'}), 400
+            x_vals, y_vals, detalles = EcuacionesDiferenciales.taylor_orden_2(x0, y0, xf, n, f_expr, df_expr)
+        elif metodo == 'taylor_3':
+            df_expr = datos.get('df_expr')
+            ddf_expr = datos.get('ddf_expr')
+            if not all([df_expr, ddf_expr]):
+                return jsonify({'error': 'Se requieren derivadas para Taylor orden 3'}), 400
+            x_vals, y_vals, detalles = EcuacionesDiferenciales.taylor_orden_3(x0, y0, xf, n, f_expr, df_expr, ddf_expr)
+        elif metodo == 'taylor_4':
+            df_expr = datos.get('df_expr')
+            ddf_expr = datos.get('ddf_expr')
+            dddf_expr = datos.get('dddf_expr')
+            if not all([df_expr, ddf_expr, dddf_expr]):
+                return jsonify({'error': 'Se requieren derivadas para Taylor orden 4'}), 400
+            x_vals, y_vals, detalles = EcuacionesDiferenciales.taylor_orden_4(x0, y0, xf, n, f_expr, df_expr, ddf_expr, dddf_expr)
+        elif metodo == 'rk3':
+            x_vals, y_vals, detalles = EcuacionesDiferenciales.runge_kutta_3(x0, y0, xf, n, f_expr)
+        elif metodo == 'rk4':
+            x_vals, y_vals, detalles = EcuacionesDiferenciales.runge_kutta_4(x0, y0, xf, n, f_expr)
+        elif metodo == 'rkf':
+            x_vals, y_vals, detalles = EcuacionesDiferenciales.runge_kutta_fehlberg(x0, y0, xf, n, f_expr)
+        elif metodo == 'adams_b':
+            x_vals, y_vals, detalles = EcuacionesDiferenciales.adams_bashforth(x0, y0, xf, n, f_expr)
+        elif metodo == 'adams_m':
+            x_vals, y_vals, detalles = EcuacionesDiferenciales.adams_moulton(x0, y0, xf, n, f_expr)
+        else:
+            return jsonify({'error': 'Método no válido'}), 400
+        
+        return jsonify({
+            'x_valores': x_vals,
+            'y_valores': y_vals,
+            'detalles': detalles,
+            'pares': list(zip(x_vals, y_vals))
         }), 200
     
     except ValueError as e:

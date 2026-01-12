@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ecuaciones Diferenciales - Métodos Numéricos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        .back-button {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background-color: #333;
+            color: white;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+
+        .section {
+            background: white;
+            border: 1px solid #999;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .accordion {
+            border: 1px solid #999;
+        }
+
+        .accordion-item {
+            border-bottom: 1px solid #999;
+        }
+
+        .accordion-item:last-child {
+            border-bottom: none;
+        }
+
+        .accordion-header {
+            background-color: #f5f5f5;
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .accordion-header:hover {
+            background-color: #efefef;
+        }
+
+        .accordion-header.active {
+            background-color: #ddd;
+        }
+
+        .accordion-header::after {
+            content: '▼';
+            font-size: 0.8rem;
+        }
+
+        .accordion-header.active::after {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            display: none;
+            padding: 15px;
+            background-color: white;
+        }
+
+        .accordion-content.show {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group small {
+            display: block;
+            color: #666;
+            font-size: 0.85rem;
+            margin-top: 3px;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #999;
+            font-size: 1rem;
+            font-family: monospace;
+            box-sizing: border-box;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-calcular {
+            background-color: #333;
+            color: white;
+        }
+
+        .btn-limpiar {
+            background-color: #ccc;
+            color: #000;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .result-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #999;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .result-value {
+            background-color: #eee;
+            padding: 10px;
+            border: 1px solid #999;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .tabla {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+
+        .tabla th,
+        .tabla td {
+            border: 1px solid #999;
+            padding: 6px;
+            text-align: center;
+        }
+
+        .tabla th {
+            background-color: #ddd;
+            font-weight: bold;
+        }
+
+        .error {
+            background-color: #fee;
+            color: #c33;
+            padding: 10px;
+            border: 1px solid #c99;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .hidden-fields {
+            display: none;
+        }
+
+        .hidden-fields.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1>Ecuaciones Diferenciales Ordinarias</h1>
+        </div>
+    </nav>
+
+    <main class="container">
+        <a href="/" class="back-button">← Volver</a>
+
+        <!-- Selector de Método -->
+        <div class="section">
+            <h2>Selecciona un Método</h2>
+            <div class="accordion">
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Métodos Básicos</span>
+                    </button>
+                    <div class="accordion-content">
+                        <div style="margin-bottom: 10px;">
+                            <input type="radio" name="metodo" value="euler" id="opt_euler" checked onchange="actualizarCampos()">
+                            <label for="opt_euler">Euler</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Métodos de Taylor</span>
+                    </button>
+                    <div class="accordion-content">
+                        <div style="margin-bottom: 10px;">
+                            <input type="radio" name="metodo" value="taylor_2" id="opt_taylor2" onchange="actualizarCampos()">
+                            <label for="opt_taylor2">Taylor Orden 2</label>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <input type="radio" name="metodo" value="taylor_3" id="opt_taylor3" onchange="actualizarCampos()">
+                            <label for="opt_taylor3">Taylor Orden 3</label>
+                        </div>
+                        <div>
+                            <input type="radio" name="metodo" value="taylor_4" id="opt_taylor4" onchange="actualizarCampos()">
+                            <label for="opt_taylor4">Taylor Orden 4</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Runge-Kutta</span>
+                    </button>
+                    <div class="accordion-content">
+                        <div style="margin-bottom: 10px;">
+                            <input type="radio" name="metodo" value="rk3" id="opt_rk3" onchange="actualizarCampos()">
+                            <label for="opt_rk3">Runge-Kutta Orden 3</label>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <input type="radio" name="metodo" value="rk4" id="opt_rk4" onchange="actualizarCampos()">
+                            <label for="opt_rk4">Runge-Kutta Orden 4</label>
+                        </div>
+                        <div>
+                            <input type="radio" name="metodo" value="rkf" id="opt_rkf" onchange="actualizarCampos()">
+                            <label for="opt_rkf">Runge-Kutta-Fehlberg (4-5)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Métodos Multi-paso</span>
+                    </button>
+                    <div class="accordion-content">
+                        <div style="margin-bottom: 10px;">
+                            <input type="radio" name="metodo" value="adams_b" id="opt_adamsb" onchange="actualizarCampos()">
+                            <label for="opt_adamsb">Adams-Bashforth</label>
+                        </div>
+                        <div>
+                            <input type="radio" name="metodo" value="adams_m" id="opt_adamsm" onchange="actualizarCampos()">
+                            <label for="opt_adamsm">Adams-Moulton</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de Entrada -->
+        <div class="section">
+            <h2>Ingresa los Datos</h2>
+            <form id="formulario">
+                <div class="form-group">
+                    <label for="f_expr">Función f(x, y)</label>
+                    <input 
+                        type="text" 
+                        id="f_expr" 
+                        placeholder="ej: x + y"
+                        required
+                    >
+                    <small>Usa 'x' e 'y' para representar variables. Ej: x**2 + y, sin(x)*y</small>
+                </div>
+
+                <div class="form-group hidden-fields" id="df_group">
+                    <label for="df_expr">Primera Derivada f'(x, y)</label>
+                    <input 
+                        type="text" 
+                        id="df_expr" 
+                        placeholder="ej: 1 + y"
+                    >
+                    <small>Para Taylor orden 2+</small>
+                </div>
+
+                <div class="form-group hidden-fields" id="ddf_group">
+                    <label for="ddf_expr">Segunda Derivada f''(x, y)</label>
+                    <input 
+                        type="text" 
+                        id="ddf_expr" 
+                        placeholder="ej: 1"
+                    >
+                    <small>Para Taylor orden 3+</small>
+                </div>
+
+                <div class="form-group hidden-fields" id="dddf_group">
+                    <label for="dddf_expr">Tercera Derivada f'''(x, y)</label>
+                    <input 
+                        type="text" 
+                        id="dddf_expr" 
+                        placeholder="ej: 0"
+                    >
+                    <small>Para Taylor orden 4</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="x0">Condición Inicial x0</label>
+                    <input 
+                        type="number" 
+                        id="x0" 
+                        placeholder="ej: 0"
+                        step="0.01"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="y0">Condición Inicial y0</label>
+                    <input 
+                        type="number" 
+                        id="y0" 
+                        placeholder="ej: 1"
+                        step="0.01"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="xf">Valor Final xf</label>
+                    <input 
+                        type="number" 
+                        id="xf" 
+                        placeholder="ej: 2"
+                        step="0.01"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="n">Número de Pasos</label>
+                    <input 
+                        type="number" 
+                        id="n" 
+                        placeholder="ej: 10"
+                        min="1"
+                        required
+                    >
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn-calcular">Calcular</button>
+                    <button type="reset" class="btn-limpiar">Limpiar</button>
+                </div>
+            </form>
+
+            <div id="error" class="error"></div>
+        </div>
+
+        <!-- Sección de Resultados -->
+        <div id="resultados" class="section results">
+            <h2>Resultados</h2>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 App de Métodos Numéricos - ESCOM</p>
+    </footer>
+
+    <script>
+        function toggleAccordion(button) {
+            const content = button.nextElementSibling;
+            button.classList.toggle('active');
+            content.classList.toggle('show');
+        }
+
+        function actualizarCampos() {
+            const metodo = document.querySelector('input[name="metodo"]:checked').value;
+            const dfGroup = document.getElementById('df_group');
+            const ddfGroup = document.getElementById('ddf_group');
+            const dddfGroup = document.getElementById('dddf_group');
+
+            dfGroup.classList.remove('show');
+            ddfGroup.classList.remove('show');
+            dddfGroup.classList.remove('show');
+
+            if (metodo === 'taylor_2') {
+                dfGroup.classList.add('show');
+            } else if (metodo === 'taylor_3') {
+                dfGroup.classList.add('show');
+                ddfGroup.classList.add('show');
+            } else if (metodo === 'taylor_4') {
+                dfGroup.classList.add('show');
+                ddfGroup.classList.add('show');
+                dddfGroup.classList.add('show');
+            }
+        }
+
+        const formulario = document.getElementById('formulario');
+        const errorDiv = document.getElementById('error');
+        const resultadosDiv = document.getElementById('resultados');
+
+        formulario.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const metodo = document.querySelector('input[name="metodo"]:checked').value;
+            const x0 = parseFloat(document.getElementById('x0').value);
+            const y0 = parseFloat(document.getElementById('y0').value);
+            const xf = parseFloat(document.getElementById('xf').value);
+            const n = parseInt(document.getElementById('n').value);
+            const f_expr = document.getElementById('f_expr').value.trim();
+
+            errorDiv.classList.remove('show');
+            errorDiv.textContent = '';
+
+            try {
+                if (isNaN(x0) || isNaN(y0) || isNaN(xf) || isNaN(n)) {
+                    throw new Error('Todos los valores deben ser números válidos');
+                }
+                if (!f_expr) {
+                    throw new Error('La función es obligatoria');
+                }
+
+                const requestBody = {
+                    metodo: metodo,
+                    x0: x0,
+                    y0: y0,
+                    xf: xf,
+                    n: n,
+                    f_expr: f_expr
+                };
+
+                if (metodo.includes('taylor')) {
+                    const df_expr = document.getElementById('df_expr').value.trim();
+                    if (!df_expr) {
+                        throw new Error('Se requiere la derivada para Taylor');
+                    }
+                    requestBody.df_expr = df_expr;
+
+                    if (metodo === 'taylor_3' || metodo === 'taylor_4') {
+                        const ddf_expr = document.getElementById('ddf_expr').value.trim();
+                        if (!ddf_expr) {
+                            throw new Error('Se requiere la segunda derivada');
+                        }
+                        requestBody.ddf_expr = ddf_expr;
+                    }
+
+                    if (metodo === 'taylor_4') {
+                        const dddf_expr = document.getElementById('dddf_expr').value.trim();
+                        if (!dddf_expr) {
+                            throw new Error('Se requiere la tercera derivada');
+                        }
+                        requestBody.dddf_expr = dddf_expr;
+                    }
+                }
+
+                const response = await fetch('/api/ecuaciones-diferenciales', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error en el servidor');
+                }
+
+                const data = await response.json();
+                mostrarResultados(data);
+
+            } catch (error) {
+                errorDiv.textContent = '❌ ' + error.message;
+                errorDiv.classList.add('show');
+                resultadosDiv.classList.remove('show');
+            }
+        });
+
+        function mostrarResultados(datos) {
+            let html = '';
+
+            html += '<div class="result-item">';
+            html += '<div class="result-label">Método Utilizado:</div>';
+            html += '<div class="result-value">' + datos.detalles.metodo + '</div>';
+            html += '</div>';
+
+            html += '<div class="result-item">';
+            html += '<div class="result-label">Parámetros:</div>';
+            html += '<div class="result-value">';
+            html += 'x0 = ' + datos.detalles.x0 + '<br>';
+            html += 'y0 = ' + datos.detalles.y0 + '<br>';
+            html += 'h = ' + datos.detalles.h.toFixed(6) + '<br>';
+            html += 'n = ' + datos.detalles.n;
+            html += '</div>';
+            html += '</div>';
+
+            html += '<div class="result-item">';
+            html += '<div class="result-label">Tabla de Resultados:</div>';
+            html += '<table class="tabla"><thead><tr><th>x</th><th>y</th></tr></thead><tbody>';
+            
+            for (let i = 0; i < datos.pares.length; i++) {
+                html += '<tr><td>' + datos.pares[i][0].toFixed(6) + '</td>';
+                html += '<td>' + datos.pares[i][1].toFixed(6) + '</td></tr>';
+            }
+
+            html += '</tbody></table>';
+            html += '</div>';
+
+            resultadosDiv.innerHTML = '<h2>Resultados</h2>' + html;
+            resultadosDiv.classList.add('show');
+        }
+
+        // Actualizar campos inicialmente
+        actualizarCampos();
+    </script>
+</body>
+</html>

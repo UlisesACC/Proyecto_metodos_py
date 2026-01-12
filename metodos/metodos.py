@@ -1116,3 +1116,596 @@ class Integracion:
         }
         
         return integral, detalles
+
+
+class SistemasLineales:
+    """Métodos para resolver sistemas de ecuaciones lineales"""
+    
+    @staticmethod
+    def eliminacion_gaussiana_simple(A: List[List[float]], b: List[float]) -> Tuple[List[float], dict]:
+        """
+        Eliminación Gaussiana simple sin pivoteo
+        
+        Args:
+            A: Matriz de coeficientes (n x n)
+            b: Vector de términos independientes
+        
+        Returns:
+            Tupla (solución, detalles)
+        """
+        A = np.array(A, dtype=float)
+        b = np.array(b, dtype=float)
+        n = len(b)
+        
+        # Crear matriz aumentada
+        M = np.column_stack([A, b])
+        
+        # Eliminación hacia adelante
+        for k in range(n - 1):
+            for i in range(k + 1, n):
+                if M[k, k] == 0:
+                    raise ValueError(f"Elemento pivote cero en posición ({k}, {k})")
+                factor = M[i, k] / M[k, k]
+                M[i, k:] = M[i, k:] - factor * M[k, k:]
+        
+        # Sustitución hacia atrás
+        x = np.zeros(n)
+        for i in range(n - 1, -1, -1):
+            x[i] = (M[i, -1] - np.dot(M[i, i+1:n], x[i+1:n])) / M[i, i]
+        
+        detalles = {
+            'metodo': 'Eliminación Gaussiana Simple',
+            'matriz_original': A.tolist(),
+            'vector_b': b.tolist(),
+            'matriz_escalonada': M[:, :-1].tolist(),
+            'determinante': np.linalg.det(A),
+            'numero_condicion': np.linalg.cond(A)
+        }
+        
+        return x.tolist(), detalles
+    
+    @staticmethod
+    def eliminacion_gaussiana_pivoteo_parcial(A: List[List[float]], b: List[float]) -> Tuple[List[float], dict]:
+        """
+        Eliminación Gaussiana con pivoteo parcial
+        
+        Args:
+            A: Matriz de coeficientes
+            b: Vector de términos independientes
+        
+        Returns:
+            Tupla (solución, detalles)
+        """
+        A = np.array(A, dtype=float)
+        b = np.array(b, dtype=float)
+        n = len(b)
+        
+        # Crear matriz aumentada
+        M = np.column_stack([A, b])
+        permutaciones = list(range(n))
+        
+        # Eliminación hacia adelante con pivoteo parcial
+        for k in range(n - 1):
+            # Encontrar pivote máximo
+            max_idx = k + np.argmax(np.abs(M[k:n, k]))
+            
+            # Intercambiar filas
+            M[[k, max_idx]] = M[[max_idx, k]]
+            permutaciones[k], permutaciones[max_idx] = permutaciones[max_idx], permutaciones[k]
+            
+            if abs(M[k, k]) < 1e-10:
+                raise ValueError("Matriz singular o mal condicionada")
+            
+            # Eliminación
+            for i in range(k + 1, n):
+                factor = M[i, k] / M[k, k]
+                M[i, k:] = M[i, k:] - factor * M[k, k:]
+        
+        # Sustitución hacia atrás
+        x = np.zeros(n)
+        for i in range(n - 1, -1, -1):
+            x[i] = (M[i, -1] - np.dot(M[i, i+1:n], x[i+1:n])) / M[i, i]
+        
+        detalles = {
+            'metodo': 'Eliminación Gaussiana con Pivoteo Parcial',
+            'permutaciones': permutaciones,
+            'matriz_escalonada': M[:, :-1].tolist()
+        }
+        
+        return x.tolist(), detalles
+    
+    @staticmethod
+    def eliminacion_gaussiana_pivoteo_total(A: List[List[float]], b: List[float]) -> Tuple[List[float], dict]:
+        """
+        Eliminación Gaussiana con pivoteo total
+        """
+        A = np.array(A, dtype=float)
+        b = np.array(b, dtype=float)
+        n = len(b)
+        
+        M = np.column_stack([A, b])
+        perm_filas = list(range(n))
+        perm_cols = list(range(n))
+        
+        for k in range(n - 1):
+            # Encontrar pivote máximo en toda la submatriz
+            max_val = 0
+            max_i, max_j = k, k
+            for i in range(k, n):
+                for j in range(k, n):
+                    if abs(M[i, j]) > abs(M[max_i, max_j]):
+                        max_i, max_j = i, j
+            
+            # Intercambiar filas
+            M[[k, max_i]] = M[[max_i, k]]
+            perm_filas[k], perm_filas[max_i] = perm_filas[max_i], perm_filas[k]
+            
+            # Intercambiar columnas
+            M[:, [k, max_j]] = M[:, [max_j, k]]
+            perm_cols[k], perm_cols[max_j] = perm_cols[max_j], perm_cols[k]
+            
+            if abs(M[k, k]) < 1e-10:
+                raise ValueError("Matriz singular")
+            
+            for i in range(k + 1, n):
+                factor = M[i, k] / M[k, k]
+                M[i, k:] = M[i, k:] - factor * M[k, k:]
+        
+        # Sustitución hacia atrás
+        x = np.zeros(n)
+        for i in range(n - 1, -1, -1):
+            x[i] = (M[i, -1] - np.dot(M[i, i+1:n], x[i+1:n])) / M[i, i]
+        
+        # Reordenar solución según permutación de columnas
+        x_reordenada = np.zeros(n)
+        for i in range(n):
+            x_reordenada[perm_cols[i]] = x[i]
+        
+        detalles = {
+            'metodo': 'Eliminación Gaussiana con Pivoteo Total',
+            'permutaciones_filas': perm_filas,
+            'permutaciones_columnas': perm_cols
+        }
+        
+        return x_reordenada.tolist(), detalles
+    
+    @staticmethod
+    def factorizacion_lu(A: List[List[float]]) -> Tuple[List[List[float]], List[List[float]], dict]:
+        """
+        Factorización LU
+        """
+        A = np.array(A, dtype=float)
+        n = len(A)
+        
+        L = np.eye(n)
+        U = np.copy(A)
+        
+        for k in range(n - 1):
+            if abs(U[k, k]) < 1e-10:
+                raise ValueError("Factorización LU no es posible sin pivoteo")
+            
+            for i in range(k + 1, n):
+                L[i, k] = U[i, k] / U[k, k]
+                U[i, k:] = U[i, k:] - L[i, k] * U[k, k:]
+                U[i, k] = 0
+        
+        detalles = {
+            'metodo': 'Factorización LU',
+            'matriz_L': L.tolist(),
+            'matriz_U': U.tolist(),
+            'verificacion': np.allclose(np.dot(L, U), A)
+        }
+        
+        return L.tolist(), U.tolist(), detalles
+    
+    @staticmethod
+    def factorizacion_plu(A: List[List[float]]) -> Tuple[List[List[float]], List[List[float]], List[List[float]], dict]:
+        """
+        Factorización PLU con pivoteo parcial
+        """
+        A = np.array(A, dtype=float)
+        n = len(A)
+        
+        P = np.eye(n)
+        L = np.eye(n)
+        U = np.copy(A)
+        
+        for k in range(n - 1):
+            # Encontrar pivote
+            max_idx = k + np.argmax(np.abs(U[k:n, k]))
+            
+            # Intercambiar filas en U
+            U[[k, max_idx]] = U[[max_idx, k]]
+            
+            # Intercambiar filas en L (excluyendo diagonal)
+            L[[k, max_idx], :k] = L[[max_idx, k], :k]
+            
+            # Actualizar P
+            P[[k, max_idx]] = P[[max_idx, k]]
+            
+            if abs(U[k, k]) < 1e-10:
+                raise ValueError("Matriz singular")
+            
+            for i in range(k + 1, n):
+                L[i, k] = U[i, k] / U[k, k]
+                U[i, k:] = U[i, k:] - L[i, k] * U[k, k:]
+                U[i, k] = 0
+        
+        detalles = {
+            'metodo': 'Factorización PLU',
+            'verificacion': np.allclose(np.dot(P, np.dot(L, U)), A)
+        }
+        
+        return P.tolist(), L.tolist(), U.tolist(), detalles
+    
+    @staticmethod
+    def factorizacion_llt(A: List[List[float]]) -> Tuple[List[List[float]], dict]:
+        """
+        Factorización LLT (Cholesky) - para matrices simétricas positivas definidas
+        """
+        A = np.array(A, dtype=float)
+        n = len(A)
+        
+        # Verificar que sea simétrica
+        if not np.allclose(A, A.T):
+            raise ValueError("La matriz debe ser simétrica")
+        
+        L = np.zeros((n, n))
+        
+        for i in range(n):
+            for j in range(i + 1):
+                suma = np.sum(L[i, :j] * L[j, :j])
+                if i == j:
+                    val = A[i, i] - suma
+                    if val <= 0:
+                        raise ValueError("La matriz no es positiva definida")
+                    L[i, j] = np.sqrt(val)
+                else:
+                    L[i, j] = (A[i, j] - suma) / L[j, j]
+        
+        detalles = {
+            'metodo': 'Factorización LLT (Cholesky)',
+            'matriz_L': L.tolist(),
+            'verificacion': np.allclose(np.dot(L, L.T), A)
+        }
+        
+        return L.tolist(), detalles
+
+
+class EcuacionesDiferenciales:
+    """Métodos para resolver ecuaciones diferenciales ordinarias"""
+    
+    @staticmethod
+    def euler(x0: float, y0: float, xf: float, n: int, f_expr: str) -> Tuple[List, List, dict]:
+        """
+        Método de Euler
+        
+        Args:
+            x0: Condición inicial x
+            y0: Condición inicial y
+            xf: Valor final de x
+            n: Número de pasos
+            f_expr: Función como string (ej: 'x + y')
+        
+        Returns:
+            Tupla (x_valores, y_valores, detalles)
+        """
+        h = (xf - x0) / n
+        x = [x0]
+        y = [y0]
+        
+        for i in range(n):
+            xi = x[-1]
+            yi = y[-1]
+            
+            # Evaluar f(x, y)
+            f_val = eval(f_expr.replace('x', str(xi)).replace('y', str(yi)))
+            
+            yi_new = yi + h * f_val
+            xi_new = xi + h
+            
+            x.append(xi_new)
+            y.append(yi_new)
+        
+        detalles = {
+            'metodo': 'Euler',
+            'x0': x0,
+            'y0': y0,
+            'xf': xf,
+            'n': n,
+            'h': h,
+            'funcion': f_expr
+        }
+        
+        return x, y, detalles
+    
+    @staticmethod
+    def taylor_orden_2(x0: float, y0: float, xf: float, n: int, f_expr: str, df_expr: str) -> Tuple[List, List, dict]:
+        """
+        Método de Taylor orden 2
+        """
+        h = (xf - x0) / n
+        x = [x0]
+        y = [y0]
+        
+        for i in range(n):
+            xi = x[-1]
+            yi = y[-1]
+            
+            f_val = eval(f_expr.replace('x', str(xi)).replace('y', str(yi)))
+            df_val = eval(df_expr.replace('x', str(xi)).replace('y', str(yi)))
+            
+            yi_new = yi + h * f_val + (h**2 / 2) * df_val
+            
+            x.append(xi + h)
+            y.append(yi_new)
+        
+        detalles = {
+            'metodo': 'Taylor Orden 2',
+            'h': h,
+            'n': n
+        }
+        
+        return x, y, detalles
+    
+    @staticmethod
+    def taylor_orden_3(x0: float, y0: float, xf: float, n: int, f_expr: str, df_expr: str, ddf_expr: str) -> Tuple[List, List, dict]:
+        """
+        Método de Taylor orden 3
+        """
+        h = (xf - x0) / n
+        x = [x0]
+        y = [y0]
+        
+        for i in range(n):
+            xi = x[-1]
+            yi = y[-1]
+            
+            f_val = eval(f_expr.replace('x', str(xi)).replace('y', str(yi)))
+            df_val = eval(df_expr.replace('x', str(xi)).replace('y', str(yi)))
+            ddf_val = eval(ddf_expr.replace('x', str(xi)).replace('y', str(yi)))
+            
+            yi_new = yi + h * f_val + (h**2 / 2) * df_val + (h**3 / 6) * ddf_val
+            
+            x.append(xi + h)
+            y.append(yi_new)
+        
+        detalles = {
+            'metodo': 'Taylor Orden 3',
+            'h': h,
+            'n': n
+        }
+        
+        return x, y, detalles
+    
+    @staticmethod
+    def taylor_orden_4(x0: float, y0: float, xf: float, n: int, f_expr: str, df_expr: str, ddf_expr: str, dddf_expr: str) -> Tuple[List, List, dict]:
+        """
+        Método de Taylor orden 4
+        """
+        h = (xf - x0) / n
+        x = [x0]
+        y = [y0]
+        
+        for i in range(n):
+            xi = x[-1]
+            yi = y[-1]
+            
+            f_val = eval(f_expr.replace('x', str(xi)).replace('y', str(yi)))
+            df_val = eval(df_expr.replace('x', str(xi)).replace('y', str(yi)))
+            ddf_val = eval(ddf_expr.replace('x', str(xi)).replace('y', str(yi)))
+            dddf_val = eval(dddf_expr.replace('x', str(xi)).replace('y', str(yi)))
+            
+            yi_new = yi + h * f_val + (h**2 / 2) * df_val + (h**3 / 6) * ddf_val + (h**4 / 24) * dddf_val
+            
+            x.append(xi + h)
+            y.append(yi_new)
+        
+        detalles = {
+            'metodo': 'Taylor Orden 4',
+            'h': h,
+            'n': n
+        }
+        
+        return x, y, detalles
+    
+    @staticmethod
+    def runge_kutta_3(x0: float, y0: float, xf: float, n: int, f_expr: str) -> Tuple[List, List, dict]:
+        """
+        Método de Runge-Kutta orden 3
+        """
+        h = (xf - x0) / n
+        x = [x0]
+        y = [y0]
+        
+        for i in range(n):
+            xi = x[-1]
+            yi = y[-1]
+            
+            k1 = eval(f_expr.replace('x', str(xi)).replace('y', str(yi)))
+            k2 = eval(f_expr.replace('x', str(xi + h/2)).replace('y', str(yi + h/2 * k1)))
+            k3 = eval(f_expr.replace('x', str(xi + h)).replace('y', str(yi - h * k1 + 2 * h * k2)))
+            
+            yi_new = yi + (h / 6) * (k1 + 4 * k2 + k3)
+            
+            x.append(xi + h)
+            y.append(yi_new)
+        
+        detalles = {
+            'metodo': 'Runge-Kutta Orden 3',
+            'h': h,
+            'n': n
+        }
+        
+        return x, y, detalles
+    
+    @staticmethod
+    def runge_kutta_4(x0: float, y0: float, xf: float, n: int, f_expr: str) -> Tuple[List, List, dict]:
+        """
+        Método de Runge-Kutta orden 4
+        """
+        h = (xf - x0) / n
+        x = [x0]
+        y = [y0]
+        
+        for i in range(n):
+            xi = x[-1]
+            yi = y[-1]
+            
+            k1 = eval(f_expr.replace('x', str(xi)).replace('y', str(yi)))
+            k2 = eval(f_expr.replace('x', str(xi + h/2)).replace('y', str(yi + h/2 * k1)))
+            k3 = eval(f_expr.replace('x', str(xi + h/2)).replace('y', str(yi + h/2 * k2)))
+            k4 = eval(f_expr.replace('x', str(xi + h)).replace('y', str(yi + h * k3)))
+            
+            yi_new = yi + (h / 6) * (k1 + 2*k2 + 2*k3 + k4)
+            
+            x.append(xi + h)
+            y.append(yi_new)
+        
+        detalles = {
+            'metodo': 'Runge-Kutta Orden 4',
+            'h': h,
+            'n': n,
+            'funcion': f_expr
+        }
+        
+        return x, y, detalles
+    
+    @staticmethod
+    def runge_kutta_fehlberg(x0: float, y0: float, xf: float, n: int, f_expr: str) -> Tuple[List, List, dict]:
+        """
+        Método de Runge-Kutta-Fehlberg (4-5)
+        """
+        h = (xf - x0) / n
+        x = [x0]
+        y = [y0]
+        
+        c = [0, 1/4, 3/8, 12/13, 1, 1/2]
+        a = [[0], [1/4], [3/32, 9/32], [1932/2197, -7200/2197, 7296/2197],
+             [439/216, -8, 3680/513, -845/4104], [-8/27, 2, -3544/2565, 1859/4104, -11/40]]
+        b = [16/135, 0, 6656/12825, 28561/56430, -9/50, 2/55]
+        
+        for i in range(n):
+            xi = x[-1]
+            yi = y[-1]
+            
+            K = [0] * 6
+            for j in range(6):
+                suma = sum(a[j][k] * K[k] for k in range(j))
+                y_temp = yi + h * suma
+                x_temp = xi + c[j] * h
+                K[j] = eval(f_expr.replace('x', str(x_temp)).replace('y', str(y_temp)))
+            
+            yi_new = yi + h * sum(b[j] * K[j] for j in range(6))
+            
+            x.append(xi + h)
+            y.append(yi_new)
+        
+        detalles = {
+            'metodo': 'Runge-Kutta-Fehlberg (4-5)',
+            'h': h,
+            'n': n
+        }
+        
+        return x, y, detalles
+    
+    @staticmethod
+    def adams_bashforth(x0: float, y0: float, xf: float, n: int, f_expr: str) -> Tuple[List, List, dict]:
+        """
+        Método de Adams-Bashforth (multi-paso)
+        """
+        h = (xf - x0) / n
+        x = [x0]
+        y = [y0]
+        
+        # Usar RK4 para los primeros 3 pasos
+        for i in range(3):
+            xi = x[-1]
+            yi = y[-1]
+            
+            k1 = eval(f_expr.replace('x', str(xi)).replace('y', str(yi)))
+            k2 = eval(f_expr.replace('x', str(xi + h/2)).replace('y', str(yi + h/2 * k1)))
+            k3 = eval(f_expr.replace('x', str(xi + h/2)).replace('y', str(yi + h/2 * k2)))
+            k4 = eval(f_expr.replace('x', str(xi + h)).replace('y', str(yi + h * k3)))
+            
+            yi_new = yi + (h / 6) * (k1 + 2*k2 + 2*k3 + k4)
+            x.append(xi + h)
+            y.append(yi_new)
+        
+        # Adams-Bashforth de 4 pasos
+        f_vals = []
+        for xi, yi in zip(x, y):
+            f_vals.append(eval(f_expr.replace('x', str(xi)).replace('y', str(yi))))
+        
+        for i in range(3, n):
+            yi_new = y[-1] + (h/24) * (55*f_vals[-1] - 59*f_vals[-2] + 37*f_vals[-3] - 9*f_vals[-4])
+            xi_new = x[-1] + h
+            
+            x.append(xi_new)
+            y.append(yi_new)
+            
+            f_new = eval(f_expr.replace('x', str(xi_new)).replace('y', str(yi_new)))
+            f_vals.append(f_new)
+            f_vals.pop(0)
+        
+        detalles = {
+            'metodo': 'Adams-Bashforth',
+            'h': h,
+            'n': n
+        }
+        
+        return x, y, detalles
+    
+    @staticmethod
+    def adams_moulton(x0: float, y0: float, xf: float, n: int, f_expr: str) -> Tuple[List, List, dict]:
+        """
+        Método de Adams-Moulton (implícito)
+        """
+        h = (xf - x0) / n
+        x = [x0]
+        y = [y0]
+        
+        # Usar RK4 para los primeros 3 pasos
+        for i in range(3):
+            xi = x[-1]
+            yi = y[-1]
+            
+            k1 = eval(f_expr.replace('x', str(xi)).replace('y', str(yi)))
+            k2 = eval(f_expr.replace('x', str(xi + h/2)).replace('y', str(yi + h/2 * k1)))
+            k3 = eval(f_expr.replace('x', str(xi + h/2)).replace('y', str(yi + h/2 * k2)))
+            k4 = eval(f_expr.replace('x', str(xi + h)).replace('y', str(yi + h * k3)))
+            
+            yi_new = yi + (h / 6) * (k1 + 2*k2 + 2*k3 + k4)
+            x.append(xi + h)
+            y.append(yi_new)
+        
+        # Adams-Moulton de 4 pasos
+        f_vals = []
+        for xi, yi in zip(x, y):
+            f_vals.append(eval(f_expr.replace('x', str(xi)).replace('y', str(yi))))
+        
+        for i in range(3, n):
+            # Predictor: Adams-Bashforth
+            y_pred = y[-1] + (h/24) * (55*f_vals[-1] - 59*f_vals[-2] + 37*f_vals[-3] - 9*f_vals[-4])
+            x_new = x[-1] + h
+            
+            # Corrector: iteración de punto fijo
+            y_corr = y_pred
+            for _ in range(3):  # Iteraciones de corrección
+                f_pred = eval(f_expr.replace('x', str(x_new)).replace('y', str(y_corr)))
+                y_corr = y[-1] + (h/24) * (9*f_pred + 19*f_vals[-1] - 5*f_vals[-2] + f_vals[-3])
+            
+            x.append(x_new)
+            y.append(y_corr)
+            
+            f_new = eval(f_expr.replace('x', str(x_new)).replace('y', str(y_corr)))
+            f_vals.append(f_new)
+            f_vals.pop(0)
+        
+        detalles = {
+            'metodo': 'Adams-Moulton',
+            'h': h,
+            'n': n
+        }
+        
+        return x, y, detalles
