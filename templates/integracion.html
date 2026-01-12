@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Derivación Numérica - Métodos Numéricos</title>
+    <title>Integración Numérica - Métodos Numéricos</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -258,7 +258,7 @@
 <body>
     <nav class="navbar">
         <div class="container">
-            <h1>Derivación Numérica</h1>
+            <h1>Integración Numérica</h1>
         </div>
     </nav>
 
@@ -269,88 +269,64 @@
         <div class="section">
             <h2>Selecciona un Método</h2>
             <div class="accordion">
-                <!-- Hacia Adelante -->
+                <!-- Métodos Básicos -->
                 <div class="accordion-item">
                     <button class="accordion-header" onclick="toggleAccordion(this)">
-                        <span>Hacia Adelante</span>
+                        <span>Métodos Básicos</span>
                     </button>
                     <div class="accordion-content">
                         <div style="margin-bottom: 10px;">
-                            <input type="radio" name="metodo" value="2_adelante" id="opt_2a" checked>
-                            <label for="opt_2a">2 Puntos Hacia Adelante</label>
-                            <button type="button" class="formula-button" onclick="mostrarFormula('2_adelante')" style="margin-left: 10px;">Ver fórmula</button>
+                            <input type="radio" name="metodo" value="trapecio" id="opt_trapecio" checked>
+                            <label for="opt_trapecio">Regla del Trapecio</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('trapecio')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                         <div style="margin-bottom: 10px;">
-                            <input type="radio" name="metodo" value="3_adelante" id="opt_3a">
-                            <label for="opt_3a">3 Puntos Hacia Adelante</label>
-                            <button type="button" class="formula-button" onclick="mostrarFormula('3_adelante')" style="margin-left: 10px;">Ver fórmula</button>
+                            <input type="radio" name="metodo" value="simpson_1_3" id="opt_simpson13">
+                            <label for="opt_simpson13">Simpson 1/3</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('simpson_1_3')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                         <div>
-                            <input type="radio" name="metodo" value="5_adelante" id="opt_5a">
-                            <label for="opt_5a">5 Puntos Hacia Adelante</label>
-                            <button type="button" class="formula-button" onclick="mostrarFormula('5_adelante')" style="margin-left: 10px;">Ver fórmula</button>
+                            <input type="radio" name="metodo" value="simpson_3_8" id="opt_simpson38">
+                            <label for="opt_simpson38">Simpson 3/8</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('simpson_3_8')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Hacia Atrás -->
+                <!-- Métodos Avanzados -->
                 <div class="accordion-item">
                     <button class="accordion-header" onclick="toggleAccordion(this)">
-                        <span>Hacia Atrás</span>
+                        <span>Métodos Avanzados</span>
                     </button>
                     <div class="accordion-content">
                         <div style="margin-bottom: 10px;">
-                            <input type="radio" name="metodo" value="2_atras" id="opt_2b">
-                            <label for="opt_2b">2 Puntos Hacia Atrás</label>
-                            <button type="button" class="formula-button" onclick="mostrarFormula('2_atras')" style="margin-left: 10px;">Ver fórmula</button>
-                        </div>
-                        <div style="margin-bottom: 10px;">
-                            <input type="radio" name="metodo" value="3_atras" id="opt_3b">
-                            <label for="opt_3b">3 Puntos Hacia Atrás</label>
-                            <button type="button" class="formula-button" onclick="mostrarFormula('3_atras')" style="margin-left: 10px;">Ver fórmula</button>
+                            <input type="radio" name="metodo" value="cuadratura_gaussiana" id="opt_gaussiana">
+                            <label for="opt_gaussiana">Cuadratura Gaussiana</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('cuadratura_gaussiana')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                         <div>
-                            <input type="radio" name="metodo" value="5_atras" id="opt_5b">
-                            <label for="opt_5b">5 Puntos Hacia Atrás</label>
-                            <button type="button" class="formula-button" onclick="mostrarFormula('5_atras')" style="margin-left: 10px;">Ver fórmula</button>
+                            <input type="radio" name="metodo" value="extrapolacion" id="opt_extrapol">
+                            <label for="opt_extrapol">Extrapolación Richardson</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('extrapolacion')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Centrada -->
+                <!-- Integración Múltiple -->
                 <div class="accordion-item">
                     <button class="accordion-header" onclick="toggleAccordion(this)">
-                        <span>Centrada</span>
+                        <span>Integración Múltiple</span>
                     </button>
                     <div class="accordion-content">
                         <div style="margin-bottom: 10px;">
-                            <input type="radio" name="metodo" value="2_centrada" id="opt_2c">
-                            <label for="opt_2c">2 Puntos Centrada</label>
-                            <button type="button" class="formula-button" onclick="mostrarFormula('2_centrada')" style="margin-left: 10px;">Ver fórmula</button>
-                        </div>
-                        <div style="margin-bottom: 10px;">
-                            <input type="radio" name="metodo" value="3_centrada" id="opt_3c">
-                            <label for="opt_3c">3 Puntos Centrada</label>
-                            <button type="button" class="formula-button" onclick="mostrarFormula('3_centrada')" style="margin-left: 10px;">Ver fórmula</button>
+                            <input type="radio" name="metodo" value="trapecio_multiple" id="opt_trapecio_mult">
+                            <label for="opt_trapecio_mult">Trapecio Múltiple</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('trapecio_multiple')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                         <div>
-                            <input type="radio" name="metodo" value="5_centrada" id="opt_5c">
-                            <label for="opt_5c">5 Puntos Centrada</label>
-                            <button type="button" class="formula-button" onclick="mostrarFormula('5_centrada')" style="margin-left: 10px;">Ver fórmula</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Richardson -->
-                <div class="accordion-item">
-                    <button class="accordion-header" onclick="toggleAccordion(this)">
-                        <span>Extrapolación</span>
-                    </button>
-                    <div class="accordion-content">
-                        <div>
-                            <input type="radio" name="metodo" value="richardson" id="opt_rich">
-                            <label for="opt_rich">Extrapolación de Richardson</label>
-                            <button type="button" class="formula-button" onclick="mostrarFormula('richardson')" style="margin-left: 10px;">Ver fórmula</button>
+                            <input type="radio" name="metodo" value="simpson_1_3_multiple" id="opt_simpson_mult">
+                            <label for="opt_simpson_mult">Simpson 1/3 Múltiple</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('simpson_1_3_multiple')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                     </div>
                 </div>
@@ -362,48 +338,71 @@
             <h2>Ingresa los Datos</h2>
             <form id="formulario">
                 <div class="form-group">
-                    <label for="nodos_x">Nodos X (separados por comas)</label>
-                    <input 
-                        type="text" 
-                        id="nodos_x" 
-                        placeholder="ej: 0, 0.5, 1, 1.5, 2"
-                        required
-                    >
-                    <small>Ingresa los valores x separados por comas</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="nodos_y">Valores Y (separados por comas)</label>
-                    <input 
-                        type="text" 
-                        id="nodos_y" 
-                        placeholder="ej: 0, 0.5, 1, 1.5, 2"
-                        required
-                    >
-                    <small>Ingresa los valores y (f(x)) separados por comas</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="paso">Tamaño del Paso (h)</label>
+                    <label for="a">Límite Inferior (a)</label>
                     <input 
                         type="number" 
-                        id="paso" 
-                        placeholder="ej: 0.5"
+                        id="a" 
+                        placeholder="ej: 0"
                         step="0.01"
                         required
                     >
-                    <small>Ingresa el tamaño del paso</small>
+                    <small>Ingresa el límite inferior de integración</small>
                 </div>
 
-                <div class="form-group" id="paso2_group" style="display: none;">
-                    <label for="paso2">Segundo Tamaño de Paso (h2)</label>
+                <div class="form-group">
+                    <label for="b">Límite Superior (b)</label>
                     <input 
                         type="number" 
-                        id="paso2" 
-                        placeholder="ej: 0.25"
+                        id="b" 
+                        placeholder="ej: 1"
                         step="0.01"
+                        required
+                    >
+                    <small>Ingresa el límite superior de integración</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="n">Número de Subintervalos (n)</label>
+                    <input 
+                        type="number" 
+                        id="n" 
+                        placeholder="ej: 4"
+                        min="1"
+                        required
+                    >
+                    <small>Ingresa el número de subintervalos</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="valores_f">Valores de la Función (separados por comas)</label>
+                    <input 
+                        type="text" 
+                        id="valores_f" 
+                        placeholder="ej: 1, 2, 3, 4, 5"
+                        required
+                    >
+                    <small>Ingresa los valores f(x) en los puntos evaluados</small>
+                </div>
+
+                <div class="form-group" id="n2_group" style="display: none;">
+                    <label for="n2">Segundo Número de Subintervalos (n2)</label>
+                    <input 
+                        type="number" 
+                        id="n2" 
+                        placeholder="ej: 8"
+                        min="1"
                     >
                     <small>Solo para Extrapolación Richardson</small>
+                </div>
+
+                <div class="form-group" id="valores_f2_group" style="display: none;">
+                    <label for="valores_f2">Valores de la Función con n2 (separados por comas)</label>
+                    <input 
+                        type="text" 
+                        id="valores_f2" 
+                        placeholder="ej: 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5"
+                    >
+                    <small>Ingresa los valores f(x) con n2 subintervalos</small>
                 </div>
 
                 <div class="button-group">
@@ -436,45 +435,33 @@
 
     <script>
         const formulas = {
-            '2_adelante': {
-                titulo: "Derivación 2 Puntos Hacia Adelante",
-                latex: "f'(x) \\approx \\frac{f(x+h) - f(x)}{h}"
+            'trapecio': {
+                titulo: "Regla del Trapecio",
+                latex: "\\int_a^b f(x)dx \\approx \\frac{h}{2}[f(x_0) + 2f(x_1) + 2f(x_2) + \\cdots + 2f(x_{n-1}) + f(x_n)]"
             },
-            '3_adelante': {
-                titulo: "Derivación 3 Puntos Hacia Adelante",
-                latex: "f'(x) \\approx \\frac{-3f(x) + 4f(x+h) - f(x+2h)}{2h}"
+            'simpson_1_3': {
+                titulo: "Simpson 1/3",
+                latex: "\\int_a^b f(x)dx \\approx \\frac{h}{3}[f(x_0) + 4f(x_1) + 2f(x_2) + 4f(x_3) + \\cdots + f(x_n)]"
             },
-            '5_adelante': {
-                titulo: "Derivación 5 Puntos Hacia Adelante",
-                latex: "f'(x) \\approx \\frac{-11f(x) + 18f(x+h) - 9f(x+2h) + 2f(x+3h)}{6h}"
+            'simpson_3_8': {
+                titulo: "Simpson 3/8",
+                latex: "\\int_a^b f(x)dx \\approx \\frac{3h}{8}[f(x_0) + 3f(x_1) + 3f(x_2) + 2f(x_3) + \\cdots + f(x_n)]"
             },
-            '2_atras': {
-                titulo: "Derivación 2 Puntos Hacia Atrás",
-                latex: "f'(x) \\approx \\frac{f(x) - f(x-h)}{h}"
+            'cuadratura_gaussiana': {
+                titulo: "Cuadratura Gaussiana",
+                latex: "\\int_a^b f(x)dx \\approx \\frac{b-a}{2}\\sum_{i=1}^n w_i f(x_i)"
             },
-            '3_atras': {
-                titulo: "Derivación 3 Puntos Hacia Atrás",
-                latex: "f'(x) \\approx \\frac{3f(x) - 4f(x-h) + f(x-2h)}{2h}"
-            },
-            '5_atras': {
-                titulo: "Derivación 5 Puntos Hacia Atrás",
-                latex: "f'(x) \\approx \\frac{-2f(x-3h) + 9f(x-2h) - 18f(x-h) + 11f(x)}{6h}"
-            },
-            '2_centrada': {
-                titulo: "Derivación 2 Puntos Centrada",
-                latex: "f'(x) \\approx \\frac{f(x+h) - f(x-h)}{2h}"
-            },
-            '3_centrada': {
-                titulo: "Derivación 3 Puntos Centrada",
-                latex: "f'(x) \\approx \\frac{-f(x+h) + f(x-h)}{2h}"
-            },
-            '5_centrada': {
-                titulo: "Derivación 5 Puntos Centrada",
-                latex: "f'(x) \\approx \\frac{-f(x+2h) + 8f(x+h) - 8f(x-h) + f(x-2h)}{12h}"
-            },
-            'richardson': {
+            'extrapolacion': {
                 titulo: "Extrapolación de Richardson",
-                latex: "f'(x) \\approx \\frac{4f'(h_2) - f'(h_1)}{3}"
+                latex: "I \\approx \\frac{4I_{h/2} - I_h}{3}"
+            },
+            'trapecio_multiple': {
+                titulo: "Trapecio Múltiple (2D)",
+                latex: "I \\approx \\frac{h_x h_y}{4}\\sum_{i,j}w_{ij}f(x_i, y_j)"
+            },
+            'simpson_1_3_multiple': {
+                titulo: "Simpson 1/3 Múltiple (2D)",
+                latex: "I \\approx \\frac{h_x h_y}{9}\\sum_{i,j}w_{ij}f(x_i, y_j)"
             }
         };
 
@@ -494,7 +481,6 @@
                 formula.innerHTML = '$$' + formulas[metodo].latex + '$$';
                 modal.classList.add('show');
                 
-                // Renderizar MathJax
                 MathJax.typesetPromise([formula]).catch(err => console.log(err));
             }
         }
@@ -515,14 +501,17 @@
         const resultadosDiv = document.getElementById('resultados');
         const metodoRadios = document.querySelectorAll('input[name="metodo"]');
 
-        // Mostrar/ocultar campo paso2 según el método
+        // Mostrar/ocultar campos según el método
         metodoRadios.forEach(radio => {
             radio.addEventListener('change', function() {
-                const paso2Group = document.getElementById('paso2_group');
-                if (this.value === 'richardson') {
-                    paso2Group.style.display = 'block';
+                const n2Group = document.getElementById('n2_group');
+                const valoresF2Group = document.getElementById('valores_f2_group');
+                if (this.value === 'extrapolacion') {
+                    n2Group.style.display = 'block';
+                    valoresF2Group.style.display = 'block';
                 } else {
-                    paso2Group.style.display = 'none';
+                    n2Group.style.display = 'none';
+                    valoresF2Group.style.display = 'none';
                 }
             });
         });
@@ -531,43 +520,50 @@
             e.preventDefault();
             
             const metodo = document.querySelector('input[name="metodo"]:checked').value;
-            const nodosXStr = document.getElementById('nodos_x').value.trim();
-            const nodosYStr = document.getElementById('nodos_y').value.trim();
-            const paso = parseFloat(document.getElementById('paso').value);
-            const paso2 = parseFloat(document.getElementById('paso2').value) || null;
+            const a = parseFloat(document.getElementById('a').value);
+            const b = parseFloat(document.getElementById('b').value);
+            const n = parseInt(document.getElementById('n').value);
+            const valoresFStr = document.getElementById('valores_f').value.trim();
+            const n2 = document.getElementById('n2').value ? parseInt(document.getElementById('n2').value) : null;
+            const valoresF2Str = document.getElementById('valores_f2').value ? document.getElementById('valores_f2').value.trim() : null;
 
             errorDiv.classList.remove('show');
             errorDiv.textContent = '';
 
             try {
-                const nodosX = nodosXStr.split(',').map(v => parseFloat(v.trim()));
-                const nodosY = nodosYStr.split(',').map(v => parseFloat(v.trim()));
+                const valoresF = valoresFStr.split(',').map(v => parseFloat(v.trim()));
 
-                if (nodosX.some(isNaN) || nodosY.some(isNaN)) {
-                    throw new Error('Los nodos deben ser números válidos');
+                if (valoresF.some(isNaN)) {
+                    throw new Error('Los valores de la función deben ser números válidos');
                 }
-                if (nodosX.length !== nodosY.length) {
-                    throw new Error('Los nodos X e Y deben tener la misma cantidad de elementos');
+                if (isNaN(a) || isNaN(b)) {
+                    throw new Error('Los límites de integración deben ser números válidos');
                 }
-                if (isNaN(paso)) {
-                    throw new Error('El tamaño del paso debe ser un número válido');
+                if (isNaN(n) || n < 1) {
+                    throw new Error('El número de subintervalos debe ser válido');
                 }
 
                 const requestBody = {
                     metodo: metodo,
-                    nodos_x: nodosX,
-                    nodos_y: nodosY,
-                    paso: paso
+                    a: a,
+                    b: b,
+                    n: n,
+                    valores_f: valoresF
                 };
 
-                if (metodo === 'richardson') {
-                    if (!paso2 || isNaN(paso2)) {
-                        throw new Error('Debe ingresar el segundo tamaño de paso para Richardson');
+                if (metodo === 'extrapolacion') {
+                    if (!n2 || !valoresF2Str) {
+                        throw new Error('Debe ingresar n2 y los valores para extrapolación');
                     }
-                    requestBody.paso2 = paso2;
+                    const valoresF2 = valoresF2Str.split(',').map(v => parseFloat(v.trim()));
+                    if (valoresF2.some(isNaN)) {
+                        throw new Error('Los valores f2 deben ser números válidos');
+                    }
+                    requestBody.n2 = n2;
+                    requestBody.valores_f2 = valoresF2;
                 }
 
-                const response = await fetch('/api/derivacion', {
+                const response = await fetch('/api/integracion', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -600,52 +596,34 @@
             html += '</div>';
 
             html += '<div class="result-item">';
-            html += '<div class="result-label">Nodos X:</div>';
-            html += '<div class="result-value">' + detalles.nodos_x.join(', ') + '</div>';
+            html += '<div class="result-label">Límites de Integración:</div>';
+            html += '<div class="result-value">a = ' + detalles.a + ', b = ' + detalles.b + '</div>';
             html += '</div>';
 
             html += '<div class="result-item">';
-            html += '<div class="result-label">Nodos Y:</div>';
-            html += '<div class="result-value">' + detalles.nodos_y.join(', ') + '</div>';
+            html += '<div class="result-label">Número de Subintervalos:</div>';
+            html += '<div class="result-value">n = ' + detalles.n + '</div>';
             html += '</div>';
 
             html += '<div class="result-item">';
-            html += '<div class="result-label">Tamaño de Paso:</div>';
-            html += '<div class="result-value">h = ' + detalles.paso + '</div>';
+            html += '<div class="result-label">Tamaño del Paso:</div>';
+            html += '<div class="result-value">h = ' + detalles.h.toFixed(6) + '</div>';
             html += '</div>';
 
-            // Mostrar tabla de resultados
             html += '<div class="result-item">';
-            html += '<div class="result-label">Tabla de Derivadas:</div>';
-            html += '<table class="tabla">';
-            html += '<thead><tr><th>X</th><th>Y</th><th>f\'(x)</th><th>Cálculo</th></tr></thead>';
-            html += '<tbody>';
-
-            for (let i = 0; i < detalles.nodos_x.length; i++) {
-                html += '<tr>';
-                html += '<td>' + detalles.nodos_x[i].toFixed(4) + '</td>';
-                html += '<td>' + detalles.nodos_y[i].toFixed(6) + '</td>';
-                
-                const derivada = datos.derivadas[i];
-                if (derivada === null) {
-                    html += '<td>-</td>';
-                } else {
-                    html += '<td>' + derivada.toFixed(6) + '</td>';
-                }
-                
-                html += '<td style="text-align: left; word-break: break-word;">' + detalles.calculos[i] + '</td>';
-                html += '</tr>';
-            }
-
-            html += '</tbody>';
-            html += '</table>';
+            html += '<div class="result-label">Valor de la Integral:</div>';
+            html += '<div class="result-value" style="font-size: 1.3rem; color: #333;">' + datos.resultado.toFixed(10) + '</div>';
             html += '</div>';
 
-            // Si es Richardson, mostrar también las otras derivadas
-            if (detalles.metodo.includes('Richardson')) {
+            if (detalles.I_n1 !== undefined) {
                 html += '<div class="result-item">';
-                html += '<div class="result-label">Pasos Utilizados:</div>';
-                html += '<div class="result-value">h1 = ' + detalles.paso_1 + ', h2 = ' + detalles.paso_2 + '</div>';
+                html += '<div class="result-label">Integral con n1:</div>';
+                html += '<div class="result-value">' + detalles.I_n1.toFixed(10) + '</div>';
+                html += '</div>';
+
+                html += '<div class="result-item">';
+                html += '<div class="result-label">Integral con n2:</div>';
+                html += '<div class="result-value">' + detalles.I_n2.toFixed(10) + '</div>';
                 html += '</div>';
             }
 

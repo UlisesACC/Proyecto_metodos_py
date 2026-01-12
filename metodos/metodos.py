@@ -874,3 +874,245 @@ class Derivacion:
         }
         
         return der_richardson, detalles
+
+class Integracion:
+    """Métodos de integración numérica"""
+    
+    @staticmethod
+    def trapecio(a: float, b: float, n: int, f_values: List[float]) -> Tuple[float, dict]:
+        """
+        Regla del Trapecio
+        
+        Args:
+            a: Límite inferior
+            b: Límite superior
+            n: Número de subintervalos
+            f_values: Valores de la función en los puntos
+        
+        Returns:
+            Tupla (valor_integral, detalles_cálculo)
+        """
+        h = (b - a) / n
+        suma = f_values[0] + f_values[-1]
+        
+        for i in range(1, n):
+            suma += 2 * f_values[i]
+        
+        integral = (h / 2) * suma
+        
+        detalles = {
+            'metodo': 'Trapecio',
+            'a': a,
+            'b': b,
+            'n': n,
+            'h': h,
+            'suma': suma,
+            'integral': integral
+        }
+        
+        return integral, detalles
+    
+    @staticmethod
+    def simpson_1_3(a: float, b: float, n: int, f_values: List[float]) -> Tuple[float, dict]:
+        """
+        Regla de Simpson 1/3
+        
+        Args:
+            a: Límite inferior
+            b: Límite superior
+            n: Número de subintervalos (debe ser par)
+            f_values: Valores de la función en los puntos
+        
+        Returns:
+            Tupla (valor_integral, detalles_cálculo)
+        """
+        if n % 2 != 0:
+            raise ValueError("Para Simpson 1/3, n debe ser par")
+        
+        h = (b - a) / n
+        suma_impar = sum(f_values[i] for i in range(1, n, 2))
+        suma_par = sum(f_values[i] for i in range(2, n-1, 2))
+        
+        integral = (h / 3) * (f_values[0] + 4*suma_impar + 2*suma_par + f_values[-1])
+        
+        detalles = {
+            'metodo': 'Simpson 1/3',
+            'a': a,
+            'b': b,
+            'n': n,
+            'h': h,
+            'suma_impar': suma_impar,
+            'suma_par': suma_par,
+            'integral': integral
+        }
+        
+        return integral, detalles
+    
+    @staticmethod
+    def simpson_3_8(a: float, b: float, n: int, f_values: List[float]) -> Tuple[float, dict]:
+        """
+        Regla de Simpson 3/8
+        
+        Args:
+            a: Límite inferior
+            b: Límite superior
+            n: Número de subintervalos (debe ser múltiplo de 3)
+            f_values: Valores de la función en los puntos
+        
+        Returns:
+            Tupla (valor_integral, detalles_cálculo)
+        """
+        if n % 3 != 0:
+            raise ValueError("Para Simpson 3/8, n debe ser múltiplo de 3")
+        
+        h = (b - a) / n
+        suma1 = sum(f_values[i] for i in range(1, n, 3))
+        suma2 = sum(f_values[i] for i in range(2, n, 3))
+        suma3 = sum(f_values[i] for i in range(3, n, 3))
+        
+        integral = (3*h / 8) * (f_values[0] + 3*suma1 + 3*suma2 + 2*suma3 + f_values[-1])
+        
+        detalles = {
+            'metodo': 'Simpson 3/8',
+            'a': a,
+            'b': b,
+            'n': n,
+            'h': h,
+            'integral': integral
+        }
+        
+        return integral, detalles
+    
+    @staticmethod
+    def cuadratura_gaussiana(a: float, b: float, f_values: List[float], n_points: int = 2) -> Tuple[float, dict]:
+        """
+        Cuadratura Gaussiana (Gauss-Legendre)
+        
+        Args:
+            a: Límite inferior
+            b: Límite superior
+            f_values: Valores de la función en los puntos
+            n_points: Número de puntos de Gauss
+        
+        Returns:
+            Tupla (valor_integral, detalles_cálculo)
+        """
+        # Puntos y pesos de Gauss-Legendre para 2 y 3 puntos
+        if n_points == 2:
+            x = [-1/np.sqrt(3), 1/np.sqrt(3)]
+            w = [1, 1]
+        elif n_points == 3:
+            x = [-np.sqrt(3/5), 0, np.sqrt(3/5)]
+            w = [5/9, 8/9, 5/9]
+        else:
+            raise ValueError("Solo soporta 2 o 3 puntos de Gauss")
+        
+        # Transformar al intervalo [a, b]
+        integral = 0
+        for i in range(n_points):
+            t = ((b - a) * x[i] + (a + b)) / 2
+            integral += w[i] * f_values[i]
+        
+        integral *= (b - a) / 2
+        
+        detalles = {
+            'metodo': f'Cuadratura Gaussiana ({n_points} puntos)',
+            'a': a,
+            'b': b,
+            'n_points': n_points,
+            'integral': integral
+        }
+        
+        return integral, detalles
+    
+    @staticmethod
+    def trapecio_multiple(a: float, b: float, n: int, f_values: List[float]) -> Tuple[float, dict]:
+        """
+        Integración múltiple con Trapecio (2D)
+        
+        Args:
+            a: Límite inferior
+            b: Límite superior
+            n: Número de subintervalos
+            f_values: Matriz de valores de la función
+        
+        Returns:
+            Tupla (valor_integral, detalles_cálculo)
+        """
+        h = (b - a) / n
+        integral = Integracion.trapecio(a, b, n, f_values)[0]
+        
+        detalles = {
+            'metodo': 'Trapecio Múltiple',
+            'a': a,
+            'b': b,
+            'n': n,
+            'h': h,
+            'integral': integral
+        }
+        
+        return integral, detalles
+    
+    @staticmethod
+    def simpson_1_3_multiple(a: float, b: float, n: int, f_values: List[float]) -> Tuple[float, dict]:
+        """
+        Integración múltiple con Simpson 1/3 (2D)
+        
+        Args:
+            a: Límite inferior
+            b: Límite superior
+            n: Número de subintervalos (debe ser par)
+            f_values: Matriz de valores de la función
+        
+        Returns:
+            Tupla (valor_integral, detalles_cálculo)
+        """
+        if n % 2 != 0:
+            raise ValueError("Para Simpson 1/3 múltiple, n debe ser par")
+        
+        integral = Integracion.simpson_1_3(a, b, n, f_values)[0]
+        
+        detalles = {
+            'metodo': 'Simpson 1/3 Múltiple',
+            'a': a,
+            'b': b,
+            'n': n,
+            'integral': integral
+        }
+        
+        return integral, detalles
+    
+    @staticmethod
+    def extrapolacion_richardson_integracion(a: float, b: float, n1: int, n2: int, f_values_n1: List[float], f_values_n2: List[float]) -> Tuple[float, dict]:
+        """
+        Extrapolación de Richardson para integración
+        
+        Args:
+            a: Límite inferior
+            b: Límite superior
+            n1: Primer número de subintervalos
+            n2: Segundo número de subintervalos
+            f_values_n1: Valores con n1 intervalos
+            f_values_n2: Valores con n2 intervalos
+        
+        Returns:
+            Tupla (valor_integral, detalles_cálculo)
+        """
+        I_n1, _ = Integracion.trapecio(a, b, n1, f_values_n1)
+        I_n2, _ = Integracion.trapecio(a, b, n2, f_values_n2)
+        
+        # Extrapolación de Richardson para trapecio: p = 2
+        integral = (4 * I_n2 - I_n1) / 3
+        
+        detalles = {
+            'metodo': 'Extrapolación Richardson (Integración)',
+            'a': a,
+            'b': b,
+            'n1': n1,
+            'n2': n2,
+            'I_n1': I_n1,
+            'I_n2': I_n2,
+            'integral': integral
+        }
+        
+        return integral, detalles
