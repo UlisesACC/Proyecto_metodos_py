@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diferencias Divididas - Métodos Numéricos</title>
+    <title>Derivación Numérica - Métodos Numéricos</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -43,6 +43,7 @@
             cursor: pointer;
             padding: 10px;
             border: 1px solid #999;
+            flex-wrap: wrap;
         }
 
         .option-label input[type="radio"] {
@@ -54,7 +55,6 @@
             background-color: #f0f0f0;
             border: 1px solid #999;
             cursor: pointer;
-            margin-left: 10px;
             font-size: 0.9rem;
         }
 
@@ -136,19 +136,20 @@
             border: 1px solid #999;
             word-break: break-all;
             font-family: monospace;
+            font-size: 0.9rem;
         }
 
         .tabla {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .tabla th,
         .tabla td {
             border: 1px solid #999;
-            padding: 8px;
+            padding: 6px;
             text-align: center;
         }
 
@@ -224,7 +225,7 @@
 <body>
     <nav class="navbar">
         <div class="container">
-            <h1>Diferencias Divididas</h1>
+            <h1>Derivación Numérica</h1>
         </div>
     </nav>
 
@@ -236,19 +237,34 @@
             <h2>Selecciona un Método</h2>
             <div class="method-options">
                 <label class="option-label">
-                    <input type="radio" name="metodo" value="adelante" checked>
-                    <span>Diferencias Hacia Adelante</span>
-                    <button type="button" class="formula-button" onclick="mostrarFormula('adelante')">Ver fórmula</button>
+                    <input type="radio" name="metodo" value="2_atras" checked>
+                    <span>2 Puntos Atrás</span>
+                    <button type="button" class="formula-button" onclick="mostrarFormula('2_atras')">Ver fórmula</button>
                 </label>
                 <label class="option-label">
-                    <input type="radio" name="metodo" value="atras">
-                    <span>Diferencias Hacia Atrás</span>
-                    <button type="button" class="formula-button" onclick="mostrarFormula('atras')">Ver fórmula</button>
+                    <input type="radio" name="metodo" value="2_centrada">
+                    <span>2 Puntos Centrada</span>
+                    <button type="button" class="formula-button" onclick="mostrarFormula('2_centrada')">Ver fórmula</button>
                 </label>
                 <label class="option-label">
-                    <input type="radio" name="metodo" value="neville">
-                    <span>Neville</span>
-                    <button type="button" class="formula-button" onclick="mostrarFormula('neville')">Ver fórmula</button>
+                    <input type="radio" name="metodo" value="3_atras">
+                    <span>3 Puntos Atrás</span>
+                    <button type="button" class="formula-button" onclick="mostrarFormula('3_atras')">Ver fórmula</button>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="metodo" value="3_centrada">
+                    <span>3 Puntos Centrada</span>
+                    <button type="button" class="formula-button" onclick="mostrarFormula('3_centrada')">Ver fórmula</button>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="metodo" value="5_centrada">
+                    <span>5 Puntos Centrada</span>
+                    <button type="button" class="formula-button" onclick="mostrarFormula('5_centrada')">Ver fórmula</button>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="metodo" value="richardson">
+                    <span>Richardson</span>
+                    <button type="button" class="formula-button" onclick="mostrarFormula('richardson')">Ver fórmula</button>
                 </label>
             </div>
         </div>
@@ -262,33 +278,44 @@
                     <input 
                         type="text" 
                         id="nodos_x" 
-                        placeholder="ej: 1, 2, 3, 4"
+                        placeholder="ej: 0, 0.5, 1, 1.5, 2"
                         required
                     >
                     <small>Ingresa los valores x separados por comas</small>
                 </div>
 
                 <div class="form-group">
-                    <label for="nodos_y">Nodos Y (separados por comas)</label>
+                    <label for="nodos_y">Valores Y (separados por comas)</label>
                     <input 
                         type="text" 
                         id="nodos_y" 
-                        placeholder="ej: 1, 4, 9, 16"
+                        placeholder="ej: 0, 0.5, 1, 1.5, 2"
                         required
                     >
-                    <small>Ingresa los valores y separados por comas</small>
+                    <small>Ingresa los valores y (f(x)) separados por comas</small>
                 </div>
 
                 <div class="form-group">
-                    <label for="punto_eval">Punto a Evaluar (X)</label>
+                    <label for="paso">Tamaño del Paso (h)</label>
                     <input 
                         type="number" 
-                        id="punto_eval" 
-                        placeholder="ej: 2.5"
+                        id="paso" 
+                        placeholder="ej: 0.5"
                         step="0.01"
                         required
                     >
-                    <small>Ingresa el punto donde deseas evaluar la interpolación</small>
+                    <small>Ingresa el tamaño del paso</small>
+                </div>
+
+                <div class="form-group" id="paso2_group" style="display: none;">
+                    <label for="paso2">Segundo Tamaño de Paso (h2)</label>
+                    <input 
+                        type="number" 
+                        id="paso2" 
+                        placeholder="ej: 0.25"
+                        step="0.01"
+                    >
+                    <small>Solo para Extrapolación Richardson</small>
                 </div>
 
                 <div class="button-group">
@@ -321,17 +348,29 @@
 
     <script>
         const formulas = {
-            adelante: {
-                titulo: "Diferencias Divididas Hacia Adelante",
-                latex: "f[x_0, x_1, \\ldots, x_n] = \\frac{f[x_1, \\ldots, x_n] - f[x_0, \\ldots, x_{n-1}]}{x_n - x_0}"
+            '2_atras': {
+                titulo: "Derivación 2 Puntos Hacia Atrás",
+                latex: "f'(x) \\approx \\frac{f(x) - f(x-h)}{h}"
             },
-            atras: {
-                titulo: "Diferencias Divididas Hacia Atrás",
-                latex: "P(x) = f[x_n] + f[x_n, x_{n-1}](x-x_n) + f[x_n, x_{n-1}, x_{n-2}](x-x_n)(x-x_{n-1}) + \\cdots"
+            '2_centrada': {
+                titulo: "Derivación 2 Puntos Centrada",
+                latex: "f'(x) \\approx \\frac{f(x+h) - f(x-h)}{2h}"
             },
-            neville: {
-                titulo: "Interpolación de Neville",
-                latex: "P_{i,j}(x) = \\frac{(x-x_{i+j})P_{i,j-1}(x) - (x-x_i)P_{i+1,j-1}(x)}{x_i - x_{i+j}}"
+            '3_atras': {
+                titulo: "Derivación 3 Puntos Hacia Atrás",
+                latex: "f'(x) \\approx \\frac{3f(x) - 4f(x-h) + f(x-2h)}{2h}"
+            },
+            '3_centrada': {
+                titulo: "Derivación 3 Puntos Centrada",
+                latex: "f'(x) \\approx \\frac{-f(x+h) + f(x-h)}{2h}"
+            },
+            '5_centrada': {
+                titulo: "Derivación 5 Puntos Centrada",
+                latex: "f'(x) \\approx \\frac{-f(x+2h) + 8f(x+h) - 8f(x-h) + f(x-2h)}{12h}"
+            },
+            'richardson': {
+                titulo: "Extrapolación de Richardson",
+                latex: "f'(x) \\approx \\frac{4f'(h_2) - f'(h_1)}{3}"
             }
         };
 
@@ -364,6 +403,19 @@
         const formulario = document.getElementById('formulario');
         const errorDiv = document.getElementById('error');
         const resultadosDiv = document.getElementById('resultados');
+        const metodoRadios = document.querySelectorAll('input[name="metodo"]');
+
+        // Mostrar/ocultar campo paso2 según el método
+        metodoRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                const paso2Group = document.getElementById('paso2_group');
+                if (this.value === 'richardson') {
+                    paso2Group.style.display = 'block';
+                } else {
+                    paso2Group.style.display = 'none';
+                }
+            });
+        });
 
         formulario.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -371,7 +423,8 @@
             const metodo = document.querySelector('input[name="metodo"]:checked').value;
             const nodosXStr = document.getElementById('nodos_x').value.trim();
             const nodosYStr = document.getElementById('nodos_y').value.trim();
-            const puntoEval = parseFloat(document.getElementById('punto_eval').value);
+            const paso = parseFloat(document.getElementById('paso').value);
+            const paso2 = parseFloat(document.getElementById('paso2').value) || null;
 
             errorDiv.classList.remove('show');
             errorDiv.textContent = '';
@@ -386,24 +439,30 @@
                 if (nodosX.length !== nodosY.length) {
                     throw new Error('Los nodos X e Y deben tener la misma cantidad de elementos');
                 }
-                if (nodosX.length < 2) {
-                    throw new Error('Se necesitan al menos 2 puntos para interpolar');
-                }
-                if (isNaN(puntoEval)) {
-                    throw new Error('El punto de evaluación debe ser un número válido');
+                if (isNaN(paso)) {
+                    throw new Error('El tamaño del paso debe ser un número válido');
                 }
 
-                const response = await fetch('/api/diferencias-divididas', {
+                const requestBody = {
+                    metodo: metodo,
+                    nodos_x: nodosX,
+                    nodos_y: nodosY,
+                    paso: paso
+                };
+
+                if (metodo === 'richardson') {
+                    if (!paso2 || isNaN(paso2)) {
+                        throw new Error('Debe ingresar el segundo tamaño de paso para Richardson');
+                    }
+                    requestBody.paso2 = paso2;
+                }
+
+                const response = await fetch('/api/derivacion', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        metodo: metodo,
-                        nodos_x: nodosX,
-                        nodos_y: nodosY,
-                        punto_eval: puntoEval
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
                 if (!response.ok) {
@@ -441,33 +500,30 @@
             html += '</div>';
 
             html += '<div class="result-item">';
-            html += '<div class="result-label">Punto de Evaluación:</div>';
-            html += '<div class="result-value">' + detalles.punto_evaluacion + '</div>';
+            html += '<div class="result-label">Tamaño de Paso:</div>';
+            html += '<div class="result-value">h = ' + detalles.paso + '</div>';
             html += '</div>';
 
+            // Mostrar tabla de resultados
             html += '<div class="result-item">';
-            html += '<div class="result-label">Valor Interpolado:</div>';
-            html += '<div class="result-value">' + datos.resultado.toFixed(10) + '</div>';
-            html += '</div>';
-
-            html += '<div class="result-item">';
-            html += '<div class="result-label">Tabla de Diferencias:</div>';
+            html += '<div class="result-label">Tabla de Derivadas:</div>';
             html += '<table class="tabla">';
-            html += '<thead><tr><th>D0</th>';
-            
-            const n = detalles.tabla_diferencias.length;
-            for (let j = 1; j < n; j++) {
-                html += '<th>D' + j + '</th>';
-            }
-            html += '</tr></thead>';
+            html += '<thead><tr><th>X</th><th>Y</th><th>f\'(x)</th><th>Cálculo</th></tr></thead>';
             html += '<tbody>';
 
-            for (let i = 0; i < n; i++) {
+            for (let i = 0; i < detalles.nodos_x.length; i++) {
                 html += '<tr>';
-                for (let j = 0; j < n - i; j++) {
-                    const valor = detalles.tabla_diferencias[i][j];
-                    html += '<td>' + (typeof valor === 'number' ? valor.toFixed(6) : '') + '</td>';
+                html += '<td>' + detalles.nodos_x[i].toFixed(4) + '</td>';
+                html += '<td>' + detalles.nodos_y[i].toFixed(6) + '</td>';
+                
+                const derivada = datos.derivadas[i];
+                if (derivada === null) {
+                    html += '<td>-</td>';
+                } else {
+                    html += '<td>' + derivada.toFixed(6) + '</td>';
                 }
+                
+                html += '<td style="text-align: left; word-break: break-word;">' + detalles.calculos[i] + '</td>';
                 html += '</tr>';
             }
 
@@ -475,200 +531,15 @@
             html += '</table>';
             html += '</div>';
 
+            // Si es Richardson, mostrar también las otras derivadas
+            if (detalles.metodo.includes('Richardson')) {
+                html += '<div class="result-item">';
+                html += '<div class="result-label">Pasos Utilizados:</div>';
+                html += '<div class="result-value">h1 = ' + detalles.paso_1 + ', h2 = ' + detalles.paso_2 + '</div>';
+                html += '</div>';
+            }
+
             resultadosDiv.innerHTML = '<h2>Resultados</h2>' + html;
-            resultadosDiv.classList.add('show');
-        }
-    </script>
-</body>
-</html>
-            <h2>Resultados</h2>
-            
-            <div class="result-item">
-                <div class="result-label">Método Utilizado:</div>
-                <div class="result-value" id="resultado-metodo"></div>
-            </div>
-
-            <div class="result-item">
-                <div class="result-label">Nodos X:</div>
-                <div class="result-value" id="resultado-nodos-x"></div>
-            </div>
-
-            <div class="result-item">
-                <div class="result-label">Nodos Y:</div>
-                <div class="result-value" id="resultado-nodos-y"></div>
-            </div>
-
-            <div class="result-item">
-                <div class="result-label">Punto de Evaluación:</div>
-                <div class="result-value" id="resultado-punto"></div>
-            </div>
-
-            <div class="result-item">
-                <div class="result-label">Valor Interpolado:</div>
-                <div class="result-value" id="resultado-valor" style="font-size: 1.5rem; color: #667eea;"></div>
-            </div>
-
-            <div class="result-item">
-                <div class="result-label">Tabla de Diferencias:</div>
-                <table class="tabla" id="tabla-diferencias"></table>
-            </div>
-        </div>
-    </main>
-
-    <footer>
-        <p>&copy; 2026 App de Métodos Numéricos - ESCOM</p>
-    </footer>
-
-    <script>
-        const formulario = document.getElementById('formulario');
-        const errorDiv = document.getElementById('error');
-        const resultadosDiv = document.getElementById('resultados');
-
-        formulario.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            // Obtener valores del formulario
-            const metodo = document.querySelector('input[name="metodo"]:checked').value;
-            const nodosXStr = document.getElementById('nodos_x').value.trim();
-            const nodosYStr = document.getElementById('nodos_y').value.trim();
-            const puntoEval = parseFloat(document.getElementById('punto_eval').value);
-
-            // Limpiar errores previos
-            errorDiv.classList.remove('show');
-            errorDiv.textContent = '';
-
-            try {
-                // Parsear nodos
-                const nodosX = nodosXStr.split(',').map(v => parseFloat(v.trim()));
-                const nodosY = nodosYStr.split(',').map(v => parseFloat(v.trim()));
-
-                // Validar entrada
-                if (nodosX.some(isNaN) || nodosY.some(isNaN)) {
-                    throw new Error('Los nodos deben ser números válidos');
-                }
-                if (nodosX.length !== nodosY.length) {
-                    throw new Error('Los nodos X e Y deben tener la misma cantidad de elementos');
-                }
-                if (nodosX.length < 2) {
-                    throw new Error('Se necesitan al menos 2 puntos para interpolar');
-                }
-                if (isNaN(puntoEval)) {
-                    throw new Error('El punto de evaluación debe ser un número válido');
-                }
-
-                // Enviar al servidor
-                const response = await fetch('/api/diferencias-divididas', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        metodo: metodo,
-                        nodos_x: nodosX,
-                        nodos_y: nodosY,
-                        punto_eval: puntoEval
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Error en el servidor');
-                }
-
-                const data = await response.json();
-                mostrarResultados(data);
-
-            } catch (error) {
-                errorDiv.textContent = '❌ ' + error.message;
-                errorDiv.classList.add('show');
-                resultadosDiv.classList.remove('show');
-            }
-        });
-
-        function mostrarResultados(datos) {
-            // Limpiar tabla anterior
-            const tabla = document.getElementById('tabla-diferencias');
-            tabla.innerHTML = '';
-
-            // Llenar tabla de diferencias
-            const tablaDatos = datos.detalles.tabla_diferencias;
-            const n = tablaDatos.length;
-
-            // Encabezado
-            const thead = tabla.createTHead();
-            const headerRow = thead.insertRow();
-            for (let j = 0; j < n; j++) {
-                const th = document.createElement('th');
-                th.textContent = `D${j}`;
-                headerRow.appendChild(th);
-            }
-
-            // Cuerpo
-            const tbody = tabla.createTBody();
-            for (let i = 0; i < n; i++) {
-                const row = tbody.insertRow();
-                for (let j = 0; j < n - i; j++) {
-                    const cell = row.insertCell();
-                    const valor = tablaDatos[i][j];
-                    cell.textContent = typeof valor === 'number' ? valor.toFixed(6) : '';
-                }
-            }
-
-            // Construir HTML de resultados
-            let html = '<h2>Resultados</h2>';
-            html += '<div class="result-item">';
-            html += '<div class="result-label">Método Utilizado:</div>';
-            html += '<div class="result-value">' + datos.detalles.metodo + '</div>';
-            html += '</div>';
-
-            html += '<div class="result-item">';
-            html += '<div class="result-label">Nodos X:</div>';
-            html += '<div class="result-value">' + datos.detalles.nodos_x.join(', ') + '</div>';
-            html += '</div>';
-
-            html += '<div class="result-item">';
-            html += '<div class="result-label">Nodos Y:</div>';
-            html += '<div class="result-value">' + datos.detalles.nodos_y.join(', ') + '</div>';
-            html += '</div>';
-
-            html += '<div class="result-item">';
-            html += '<div class="result-label">Punto de Evaluación:</div>';
-            html += '<div class="result-value">' + datos.detalles.punto_evaluacion + '</div>';
-            html += '</div>';
-
-            html += '<div class="result-item">';
-            html += '<div class="result-label">Valor Interpolado:</div>';
-            html += '<div class="result-value">' + datos.resultado.toFixed(10) + '</div>';
-            html += '</div>';
-
-            html += '<div class="result-item">';
-            html += '<div class="result-label">Tabla de Diferencias:</div>';
-            html += '<table class="tabla" id="tabla-diferencias"></table>';
-            html += '</div>';
-
-            resultadosDiv.innerHTML = html;
-            
-            // Recrear tabla después de actualizar HTML
-            const nuevaTabla = document.getElementById('tabla-diferencias');
-            const thead2 = nuevaTabla.createTHead();
-            const headerRow2 = thead2.insertRow();
-            for (let j = 0; j < n; j++) {
-                const th = document.createElement('th');
-                th.textContent = `D${j}`;
-                headerRow2.appendChild(th);
-            }
-
-            const tbody2 = nuevaTabla.createTBody();
-            for (let i = 0; i < n; i++) {
-                const row = tbody2.insertRow();
-                for (let j = 0; j < n - i; j++) {
-                    const cell = row.insertCell();
-                    const valor = tablaDatos[i][j];
-                    cell.textContent = typeof valor === 'number' ? valor.toFixed(6) : '';
-                }
-            }
-
-            // Mostrar resultados
             resultadosDiv.classList.add('show');
         }
     </script>
