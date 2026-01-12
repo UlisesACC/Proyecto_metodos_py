@@ -230,6 +230,64 @@
         .error.show {
             display: block;
         }
+
+        .formula-button {
+            padding: 6px 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #999;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        /* Modal para fórmulas */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #999;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 5px;
+        }
+
+        .modal-header {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .modal-formula {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .modal-close {
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -254,14 +312,17 @@
                         <div style="margin-bottom: 10px;">
                             <input type="radio" name="metodo" value="gaussiana_simple" id="opt_gaussiana_simple" checked>
                             <label for="opt_gaussiana_simple">Eliminación Gaussiana Simple</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('gaussiana_simple')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                         <div style="margin-bottom: 10px;">
                             <input type="radio" name="metodo" value="gaussiana_parcial" id="opt_gaussiana_parcial">
                             <label for="opt_gaussiana_parcial">Pivoteo Parcial</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('gaussiana_parcial')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                         <div>
                             <input type="radio" name="metodo" value="gaussiana_total" id="opt_gaussiana_total">
                             <label for="opt_gaussiana_total">Pivoteo Total</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('gaussiana_total')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                     </div>
                 </div>
@@ -274,14 +335,17 @@
                         <div style="margin-bottom: 10px;">
                             <input type="radio" name="metodo" value="lu" id="opt_lu">
                             <label for="opt_lu">Factorización LU</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('lu')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                         <div style="margin-bottom: 10px;">
                             <input type="radio" name="metodo" value="plu" id="opt_plu">
                             <label for="opt_plu">Factorización PLU</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('plu')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                         <div>
                             <input type="radio" name="metodo" value="llt" id="opt_llt">
                             <label for="opt_llt">Factorización LLT (Cholesky)</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('llt')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                     </div>
                 </div>
@@ -328,7 +392,68 @@
         <p>&copy; 2026 App de Métodos Numéricos - ESCOM</p>
     </footer>
 
+    <!-- Modal para fórmulas -->
+    <div id="formulaModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header" id="modalTitle"></div>
+            <div class="modal-formula" id="modalFormula"></div>
+            <button class="modal-close" onclick="cerrarModal()">Cerrar</button>
+        </div>
+    </div>
+
     <script>
+        const formulas = {
+            'gaussiana_simple': {
+                titulo: "Eliminación Gaussiana Simple",
+                latex: "\\begin{align} &\\text{Fase de eliminación:} \\\\ &m_{ik} = \\frac{a_{ik}}{a_{kk}} \\\\ &a_{ij} = a_{ij} - m_{ik} \\cdot a_{kj} \\\\ &\\text{Sustitución hacia atrás:} \\\\ &x_i = \\frac{b_i - \\sum_{j=i+1}^{n} a_{ij}x_j}{a_{ii}} \\end{align}"
+            },
+            'gaussiana_parcial': {
+                titulo: "Eliminación Gaussiana con Pivoteo Parcial",
+                latex: "\\begin{align} &\\text{Seleccionar pivote:} \\\\ &|a_{kk}^{(k)}| = \\max_{i=k}^{n} |a_{ik}^{(k)}| \\\\ &\\text{Intercambiar filas e iteraciones normales} \\end{align}"
+            },
+            'gaussiana_total': {
+                titulo: "Eliminación Gaussiana con Pivoteo Total",
+                latex: "\\begin{align} &\\text{Seleccionar pivote máximo:} \\\\ &|a_{pq}^{(k)}| = \\max_{i,j=k}^{n} |a_{ij}^{(k)}| \\\\ &\\text{Intercambiar filas y columnas según sea necesario} \\end{align}"
+            },
+            'lu': {
+                titulo: "Factorización LU",
+                latex: "A = LU \\text{ donde } L \\text{ es triangular inferior y } U \\text{ es triangular superior} \\\\ \\text{Luego resolver: } Ly = b \\text{ y } Ux = y"
+            },
+            'plu': {
+                titulo: "Factorización PLU (con Pivoteo)",
+                latex: "PA = LU \\text{ donde } P \\text{ es matriz de permutación} \\\\ \\text{Resolver: } Ly = Pb \\text{ y } Ux = y"
+            },
+            'llt': {
+                titulo: "Factorización LLT (Cholesky)",
+                latex: "A = LL^T \\text{ donde } L \\text{ es triangular inferior} \\\\ l_{ii} = \\sqrt{a_{ii} - \\sum_{k=1}^{i-1} l_{ik}^2} \\\\ l_{ji} = \\frac{1}{l_{ii}}\\left(a_{ji} - \\sum_{k=1}^{i-1} l_{jk}l_{ik}\\right)"
+            }
+        };
+
+        function mostrarFormula(metodo) {
+            const modal = document.getElementById('formulaModal');
+            const title = document.getElementById('modalTitle');
+            const formula = document.getElementById('modalFormula');
+            
+            if (formulas[metodo]) {
+                title.textContent = formulas[metodo].titulo;
+                formula.innerHTML = '$$' + formulas[metodo].latex + '$$';
+                modal.classList.add('show');
+                
+                MathJax.typesetPromise([formula]).catch(err => console.log(err));
+            }
+        }
+
+        function cerrarModal() {
+            document.getElementById('formulaModal').classList.remove('show');
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('formulaModal');
+            if (event.target === modal) {
+                modal.classList.remove('show');
+            }
+        }
+
         function toggleAccordion(button) {
             const content = button.nextElementSibling;
             button.classList.toggle('active');

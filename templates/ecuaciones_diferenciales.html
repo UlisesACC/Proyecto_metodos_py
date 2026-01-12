@@ -205,6 +205,64 @@
         .hidden-fields.show {
             display: block;
         }
+
+        .formula-button {
+            padding: 6px 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #999;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        /* Modal para fórmulas */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #999;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 5px;
+        }
+
+        .modal-header {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .modal-formula {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .modal-close {
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -229,6 +287,7 @@
                         <div style="margin-bottom: 10px;">
                             <input type="radio" name="metodo" value="euler" id="opt_euler" checked onchange="actualizarCampos()">
                             <label for="opt_euler">Euler</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('euler')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                     </div>
                 </div>
@@ -241,14 +300,17 @@
                         <div style="margin-bottom: 10px;">
                             <input type="radio" name="metodo" value="taylor_2" id="opt_taylor2" onchange="actualizarCampos()">
                             <label for="opt_taylor2">Taylor Orden 2</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('taylor_2')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                         <div style="margin-bottom: 10px;">
                             <input type="radio" name="metodo" value="taylor_3" id="opt_taylor3" onchange="actualizarCampos()">
                             <label for="opt_taylor3">Taylor Orden 3</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('taylor_3')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                         <div>
                             <input type="radio" name="metodo" value="taylor_4" id="opt_taylor4" onchange="actualizarCampos()">
                             <label for="opt_taylor4">Taylor Orden 4</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('taylor_4')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                     </div>
                 </div>
@@ -261,14 +323,17 @@
                         <div style="margin-bottom: 10px;">
                             <input type="radio" name="metodo" value="rk3" id="opt_rk3" onchange="actualizarCampos()">
                             <label for="opt_rk3">Runge-Kutta Orden 3</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('rk3')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                         <div style="margin-bottom: 10px;">
                             <input type="radio" name="metodo" value="rk4" id="opt_rk4" onchange="actualizarCampos()">
                             <label for="opt_rk4">Runge-Kutta Orden 4</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('rk4')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                         <div>
                             <input type="radio" name="metodo" value="rkf" id="opt_rkf" onchange="actualizarCampos()">
                             <label for="opt_rkf">Runge-Kutta-Fehlberg (4-5)</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('rkf')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                     </div>
                 </div>
@@ -281,10 +346,12 @@
                         <div style="margin-bottom: 10px;">
                             <input type="radio" name="metodo" value="adams_b" id="opt_adamsb" onchange="actualizarCampos()">
                             <label for="opt_adamsb">Adams-Bashforth</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('adams_b')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                         <div>
                             <input type="radio" name="metodo" value="adams_m" id="opt_adamsm" onchange="actualizarCampos()">
                             <label for="opt_adamsm">Adams-Moulton</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('adams_m')" style="margin-left: 10px;">Ver fórmula</button>
                         </div>
                     </div>
                 </div>
@@ -399,7 +466,80 @@
         <p>&copy; 2026 App de Métodos Numéricos - ESCOM</p>
     </footer>
 
+    <!-- Modal para fórmulas -->
+    <div id="formulaModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header" id="modalTitle"></div>
+            <div class="modal-formula" id="modalFormula"></div>
+            <button class="modal-close" onclick="cerrarModal()">Cerrar</button>
+        </div>
+    </div>
+
     <script>
+        const formulas = {
+            'euler': {
+                titulo: "Método de Euler",
+                latex: "y_{i+1} = y_i + h \\cdot f(x_i, y_i)"
+            },
+            'taylor_2': {
+                titulo: "Método de Taylor Orden 2",
+                latex: "y_{i+1} = y_i + h \\cdot f(x_i, y_i) + \\frac{h^2}{2} \\cdot f'(x_i, y_i)"
+            },
+            'taylor_3': {
+                titulo: "Método de Taylor Orden 3",
+                latex: "y_{i+1} = y_i + h \\cdot f + \\frac{h^2}{2} \\cdot f' + \\frac{h^3}{6} \\cdot f''"
+            },
+            'taylor_4': {
+                titulo: "Método de Taylor Orden 4",
+                latex: "y_{i+1} = y_i + h \\cdot f + \\frac{h^2}{2} \\cdot f' + \\frac{h^3}{6} \\cdot f'' + \\frac{h^4}{24} \\cdot f'''"
+            },
+            'rk3': {
+                titulo: "Runge-Kutta Orden 3",
+                latex: "\\begin{align} k_1 &= f(x_i, y_i) \\\\ k_2 &= f(x_i + h/2, y_i + hk_1/2) \\\\ k_3 &= f(x_i + h, y_i - hk_1 + 2hk_2) \\\\ y_{i+1} &= y_i + \\frac{h}{6}(k_1 + 4k_2 + k_3) \\end{align}"
+            },
+            'rk4': {
+                titulo: "Runge-Kutta Orden 4",
+                latex: "\\begin{align} k_1 &= f(x_i, y_i) \\\\ k_2 &= f(x_i + h/2, y_i + hk_1/2) \\\\ k_3 &= f(x_i + h/2, y_i + hk_2/2) \\\\ k_4 &= f(x_i + h, y_i + hk_3) \\\\ y_{i+1} &= y_i + \\frac{h}{6}(k_1 + 2k_2 + 2k_3 + k_4) \\end{align}"
+            },
+            'rkf': {
+                titulo: "Runge-Kutta-Fehlberg (4-5)",
+                latex: "\\text{Combina dos métodos RK de orden 4 y 5 para estimar error} \\\\ y_{i+1} = y_i + h \\sum_{i} b_i k_i"
+            },
+            'adams_b': {
+                titulo: "Adams-Bashforth (Multi-paso)",
+                latex: "y_{n+1} = y_n + \\frac{h}{24}(55f_n - 59f_{n-1} + 37f_{n-2} - 9f_{n-3})"
+            },
+            'adams_m': {
+                titulo: "Adams-Moulton (Implícito)",
+                latex: "y_{n+1} = y_n + \\frac{h}{24}(9f_{n+1} + 19f_n - 5f_{n-1} + f_{n-2})"
+            }
+        };
+
+        function mostrarFormula(metodo) {
+            const modal = document.getElementById('formulaModal');
+            const title = document.getElementById('modalTitle');
+            const formula = document.getElementById('modalFormula');
+            
+            if (formulas[metodo]) {
+                title.textContent = formulas[metodo].titulo;
+                formula.innerHTML = '$$' + formulas[metodo].latex + '$$';
+                modal.classList.add('show');
+                
+                MathJax.typesetPromise([formula]).catch(err => console.log(err));
+            }
+        }
+
+        function cerrarModal() {
+            document.getElementById('formulaModal').classList.remove('show');
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('formulaModal');
+            if (event.target === modal) {
+                modal.classList.remove('show');
+            }
+        }
+
         function toggleAccordion(button) {
             const content = button.nextElementSibling;
             button.classList.toggle('active');

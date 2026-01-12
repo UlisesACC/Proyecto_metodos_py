@@ -85,30 +85,67 @@ Proyecto_metodos_py/
 
 ## Métodos Numéricos Disponibles
 
-### Interpolación - Diferencias Divididas
+### 1. Interpolación - Diferencias Divididas
 - **Hacia Adelante**: Utiliza los nodos posteriores para calcular la interpolación
 - **Hacia Atrás**: Utiliza los nodos anteriores para calcular la interpolación  
 - **Neville**: Método de interpolación polinomial sin calcular coeficientes
 
-### Derivación Numérica
+### 2. Derivación Numérica
 
 #### Hacia Adelante (Forward Differences)
-- **2 Puntos**: $f'(x) \\approx \\frac{f(x+h) - f(x)}{h}$
-- **3 Puntos**: $f'(x) \\approx \\frac{-3f(x) + 4f(x+h) - f(x+2h)}{2h}$
-- **5 Puntos**: $f'(x) \\approx \\frac{-11f(x) + 18f(x+h) - 9f(x+2h) + 2f(x+3h)}{6h}$
+- **2 Puntos**: $f'(x) \approx \frac{f(x+h) - f(x)}{h}$
+- **3 Puntos**: $f'(x) \approx \frac{-3f(x) + 4f(x+h) - f(x+2h)}{2h}$
+- **5 Puntos**: $f'(x) \approx \frac{-11f(x) + 18f(x+h) - 9f(x+2h) + 2f(x+3h)}{6h}$
 
 #### Hacia Atrás (Backward Differences)
-- **2 Puntos**: $f'(x) \\approx \\frac{f(x) - f(x-h)}{h}$
-- **3 Puntos**: $f'(x) \\approx \\frac{3f(x) - 4f(x-h) + f(x-2h)}{2h}$
-- **5 Puntos**: $f'(x) \\approx \\frac{-2f(x-3h) + 9f(x-2h) - 18f(x-h) + 11f(x)}{6h}$
+- **2 Puntos**: $f'(x) \approx \frac{f(x) - f(x-h)}{h}$
+- **3 Puntos**: $f'(x) \approx \frac{3f(x) - 4f(x-h) + f(x-2h)}{2h}$
+- **5 Puntos**: $f'(x) \approx \frac{-2f(x-3h) + 9f(x-2h) - 18f(x-h) + 11f(x)}{6h}$
 
 #### Centrada (Centered Differences)
-- **2 Puntos**: $f'(x) \\approx \\frac{f(x+h) - f(x-h)}{2h}$
-- **3 Puntos**: $f'(x) \\approx \\frac{-f(x+h) + f(x-h)}{2h}$
-- **5 Puntos**: $f'(x) \\approx \\frac{-f(x+2h) + 8f(x+h) - 8f(x-h) + f(x-2h)}{12h}$
+- **2 Puntos**: $f'(x) \approx \frac{f(x+h) - f(x-h)}{2h}$
+- **3 Puntos**: $f'(x) \approx \frac{-f(x+h) + f(x-h)}{2h}$
+- **5 Puntos**: $f'(x) \approx \frac{-f(x+2h) + 8f(x+h) - 8f(x-h) + f(x-2h)}{12h}$
 
 #### Extrapolación de Richardson
 - Mejora la precisión usando dos tamaños de paso diferentes
+
+### 3. Integración Numérica
+- **Trapecio**: $\int_a^b f(x)dx \approx \frac{h}{2}[f_0 + 2f_1 + ... + 2f_{n-1} + f_n]$
+- **Simpson 1/3**: $\int_a^b f(x)dx \approx \frac{h}{3}[f_0 + 4f_1 + 2f_2 + ... + f_n]$
+- **Simpson 3/8**: $\int_a^b f(x)dx \approx \frac{3h}{8}[f_0 + 3f_1 + 3f_2 + ... + f_n]$
+- **Cuadratura Gaussiana**: Integración usando puntos óptimos y pesos
+- **Integración Múltiple**: Extensión 2D de Trapecio y Simpson 1/3
+- **Extrapolación Richardson**: Mejora de precisión combinando intervalos
+
+### 4. Sistemas de Ecuaciones Lineales
+
+#### Eliminación Gaussiana
+- **Simple**: Método básico sin pivoteo
+- **Pivoteo Parcial**: Selecciona el máximo en la columna
+- **Pivoteo Total**: Selecciona el máximo en toda la submatriz
+
+#### Factorización de Matrices
+- **LU**: Descomposición $A = LU$
+- **PLU**: Descomposición con pivoteo $PA = LU$
+- **LLT (Cholesky)**: Para matrices simétricas positivas definidas $A = LL^T$
+
+### 5. Ecuaciones Diferenciales Ordinarias
+
+#### Métodos de Paso Fijo
+- **Euler**: Orden 1, $y_{n+1} = y_n + hf(x_n, y_n)$
+- **Taylor Orden 2**: Incorpora primera derivada
+- **Taylor Orden 3**: Incorpora segunda derivada
+- **Taylor Orden 4**: Incorpora tercera derivada
+
+#### Runge-Kutta
+- **Orden 3**: 3 evaluaciones de función
+- **Orden 4**: 4 evaluaciones de función (más popular)
+- **Runge-Kutta-Fehlberg (4-5)**: Método adaptativo con control de error
+
+#### Métodos Multi-paso
+- **Adams-Bashforth**: Método explícito de 4 pasos
+- **Adams-Moulton**: Método implícito de 4 pasos (predictor-corrector)
 
 ## Características
 
@@ -119,6 +156,20 @@ Proyecto_metodos_py/
 - 🐳 Soporte para Docker y Docker Compose
 - 📱 Diseño responsivo (CSS novato)
 - 🔄 Soporte para múltiples métodos numéricos
+- 📖 Botones "Ver fórmula" en cada método para consultar la ecuación matemática
+
+## Documentación Completa de Fórmulas
+
+Para una documentación detallada con **todas las fórmulas matemáticas**, consulta:
+
+📄 **[README_FORMULAS.md](README_FORMULAS.md)**
+
+Este archivo contiene:
+- Todas las fórmulas en notación LaTeX
+- Explicación de parámetros
+- Órdenes de error y convergencia
+- Tabla comparativa de métodos
+- Notas sobre estabilidad y precisión
 
 ## Desarrollo
 
