@@ -30,24 +30,57 @@
             font-size: 1.3rem;
         }
 
-        .method-options {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-        }
-
-        .option-label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            padding: 10px;
+        /* Estilos del Acordeón */
+        .accordion {
             border: 1px solid #999;
-            flex-wrap: wrap;
         }
 
-        .option-label input[type="radio"] {
+        .accordion-item {
+            border-bottom: 1px solid #999;
+        }
+
+        .accordion-item:last-child {
+            border-bottom: none;
+        }
+
+        .accordion-header {
+            background-color: #f5f5f5;
+            padding: 15px;
             cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .accordion-header:hover {
+            background-color: #efefef;
+        }
+
+        .accordion-header.active {
+            background-color: #ddd;
+        }
+
+        .accordion-header::after {
+            content: '▼';
+            font-size: 0.8rem;
+        }
+
+        .accordion-header.active::after {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            display: none;
+            padding: 15px;
+            background-color: white;
+        }
+
+        .accordion-content.show {
+            display: block;
         }
 
         .formula-button {
@@ -232,40 +265,95 @@
     <main class="container">
         <a href="/" class="back-button">← Volver</a>
 
-        <!-- Selector de Método -->
+        <!-- Selector de Método con Acordeón -->
         <div class="section">
             <h2>Selecciona un Método</h2>
-            <div class="method-options">
-                <label class="option-label">
-                    <input type="radio" name="metodo" value="2_atras" checked>
-                    <span>2 Puntos Atrás</span>
-                    <button type="button" class="formula-button" onclick="mostrarFormula('2_atras')">Ver fórmula</button>
-                </label>
-                <label class="option-label">
-                    <input type="radio" name="metodo" value="2_centrada">
-                    <span>2 Puntos Centrada</span>
-                    <button type="button" class="formula-button" onclick="mostrarFormula('2_centrada')">Ver fórmula</button>
-                </label>
-                <label class="option-label">
-                    <input type="radio" name="metodo" value="3_atras">
-                    <span>3 Puntos Atrás</span>
-                    <button type="button" class="formula-button" onclick="mostrarFormula('3_atras')">Ver fórmula</button>
-                </label>
-                <label class="option-label">
-                    <input type="radio" name="metodo" value="3_centrada">
-                    <span>3 Puntos Centrada</span>
-                    <button type="button" class="formula-button" onclick="mostrarFormula('3_centrada')">Ver fórmula</button>
-                </label>
-                <label class="option-label">
-                    <input type="radio" name="metodo" value="5_centrada">
-                    <span>5 Puntos Centrada</span>
-                    <button type="button" class="formula-button" onclick="mostrarFormula('5_centrada')">Ver fórmula</button>
-                </label>
-                <label class="option-label">
-                    <input type="radio" name="metodo" value="richardson">
-                    <span>Richardson</span>
-                    <button type="button" class="formula-button" onclick="mostrarFormula('richardson')">Ver fórmula</button>
-                </label>
+            <div class="accordion">
+                <!-- Hacia Adelante -->
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Hacia Adelante</span>
+                    </button>
+                    <div class="accordion-content">
+                        <div style="margin-bottom: 10px;">
+                            <input type="radio" name="metodo" value="2_adelante" id="opt_2a" checked>
+                            <label for="opt_2a">2 Puntos Hacia Adelante</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('2_adelante')" style="margin-left: 10px;">Ver fórmula</button>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <input type="radio" name="metodo" value="3_adelante" id="opt_3a">
+                            <label for="opt_3a">3 Puntos Hacia Adelante</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('3_adelante')" style="margin-left: 10px;">Ver fórmula</button>
+                        </div>
+                        <div>
+                            <input type="radio" name="metodo" value="5_adelante" id="opt_5a">
+                            <label for="opt_5a">5 Puntos Hacia Adelante</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('5_adelante')" style="margin-left: 10px;">Ver fórmula</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hacia Atrás -->
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Hacia Atrás</span>
+                    </button>
+                    <div class="accordion-content">
+                        <div style="margin-bottom: 10px;">
+                            <input type="radio" name="metodo" value="2_atras" id="opt_2b">
+                            <label for="opt_2b">2 Puntos Hacia Atrás</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('2_atras')" style="margin-left: 10px;">Ver fórmula</button>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <input type="radio" name="metodo" value="3_atras" id="opt_3b">
+                            <label for="opt_3b">3 Puntos Hacia Atrás</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('3_atras')" style="margin-left: 10px;">Ver fórmula</button>
+                        </div>
+                        <div>
+                            <input type="radio" name="metodo" value="5_atras" id="opt_5b">
+                            <label for="opt_5b">5 Puntos Hacia Atrás</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('5_atras')" style="margin-left: 10px;">Ver fórmula</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Centrada -->
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Centrada</span>
+                    </button>
+                    <div class="accordion-content">
+                        <div style="margin-bottom: 10px;">
+                            <input type="radio" name="metodo" value="2_centrada" id="opt_2c">
+                            <label for="opt_2c">2 Puntos Centrada</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('2_centrada')" style="margin-left: 10px;">Ver fórmula</button>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <input type="radio" name="metodo" value="3_centrada" id="opt_3c">
+                            <label for="opt_3c">3 Puntos Centrada</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('3_centrada')" style="margin-left: 10px;">Ver fórmula</button>
+                        </div>
+                        <div>
+                            <input type="radio" name="metodo" value="5_centrada" id="opt_5c">
+                            <label for="opt_5c">5 Puntos Centrada</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('5_centrada')" style="margin-left: 10px;">Ver fórmula</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Richardson -->
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Extrapolación</span>
+                    </button>
+                    <div class="accordion-content">
+                        <div>
+                            <input type="radio" name="metodo" value="richardson" id="opt_rich">
+                            <label for="opt_rich">Extrapolación de Richardson</label>
+                            <button type="button" class="formula-button" onclick="mostrarFormula('richardson')" style="margin-left: 10px;">Ver fórmula</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -348,17 +436,33 @@
 
     <script>
         const formulas = {
+            '2_adelante': {
+                titulo: "Derivación 2 Puntos Hacia Adelante",
+                latex: "f'(x) \\approx \\frac{f(x+h) - f(x)}{h}"
+            },
+            '3_adelante': {
+                titulo: "Derivación 3 Puntos Hacia Adelante",
+                latex: "f'(x) \\approx \\frac{-3f(x) + 4f(x+h) - f(x+2h)}{2h}"
+            },
+            '5_adelante': {
+                titulo: "Derivación 5 Puntos Hacia Adelante",
+                latex: "f'(x) \\approx \\frac{-11f(x) + 18f(x+h) - 9f(x+2h) + 2f(x+3h)}{6h}"
+            },
             '2_atras': {
                 titulo: "Derivación 2 Puntos Hacia Atrás",
                 latex: "f'(x) \\approx \\frac{f(x) - f(x-h)}{h}"
             },
-            '2_centrada': {
-                titulo: "Derivación 2 Puntos Centrada",
-                latex: "f'(x) \\approx \\frac{f(x+h) - f(x-h)}{2h}"
-            },
             '3_atras': {
                 titulo: "Derivación 3 Puntos Hacia Atrás",
                 latex: "f'(x) \\approx \\frac{3f(x) - 4f(x-h) + f(x-2h)}{2h}"
+            },
+            '5_atras': {
+                titulo: "Derivación 5 Puntos Hacia Atrás",
+                latex: "f'(x) \\approx \\frac{-2f(x-3h) + 9f(x-2h) - 18f(x-h) + 11f(x)}{6h}"
+            },
+            '2_centrada': {
+                titulo: "Derivación 2 Puntos Centrada",
+                latex: "f'(x) \\approx \\frac{f(x+h) - f(x-h)}{2h}"
             },
             '3_centrada': {
                 titulo: "Derivación 3 Puntos Centrada",
@@ -374,7 +478,11 @@
             }
         };
 
-        function mostrarFormula(metodo) {
+        function toggleAccordion(button) {
+            const content = button.nextElementSibling;
+            button.classList.toggle('active');
+            content.classList.toggle('show');
+        }
             const modal = document.getElementById('formulaModal');
             const title = document.getElementById('modalTitle');
             const formula = document.getElementById('modalFormula');

@@ -89,14 +89,22 @@ def api_derivacion():
             return jsonify({'error': 'Faltan campos requeridos'}), 400
         
         # Ejecutar método seleccionado
-        if metodo == '2_atras':
+        if metodo == '2_adelante':
+            derivadas, detalles = Derivacion.dos_puntos_adelante(nodos_x, nodos_y, paso)
+        elif metodo == '2_atras':
             derivadas, detalles = Derivacion.dos_puntos_atras(nodos_x, nodos_y, paso)
-        elif metodo == '2_centrada':
-            derivadas, detalles = Derivacion.dos_puntos_centrada(nodos_x, nodos_y, paso)
+        elif metodo == '3_adelante':
+            derivadas, detalles = Derivacion.tres_puntos_adelante(nodos_x, nodos_y, paso)
         elif metodo == '3_atras':
             derivadas, detalles = Derivacion.tres_puntos_atras(nodos_x, nodos_y, paso)
+        elif metodo == '2_centrada':
+            derivadas, detalles = Derivacion.dos_puntos_centrada(nodos_x, nodos_y, paso)
         elif metodo == '3_centrada':
             derivadas, detalles = Derivacion.tres_puntos_centrada(nodos_x, nodos_y, paso)
+        elif metodo == '5_adelante':
+            derivadas, detalles = Derivacion.cinco_puntos_adelante(nodos_x, nodos_y, paso)
+        elif metodo == '5_atras':
+            derivadas, detalles = Derivacion.cinco_puntos_atras(nodos_x, nodos_y, paso)
         elif metodo == '5_centrada':
             derivadas, detalles = Derivacion.cinco_puntos_centrada(nodos_x, nodos_y, paso)
         elif metodo == 'richardson':

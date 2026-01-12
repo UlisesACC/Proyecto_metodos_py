@@ -164,7 +164,391 @@ class Derivacion:
     """Métodos de derivación numérica"""
     
     @staticmethod
+    def dos_puntos_adelante(x: List[float], y: List[float], h: float) -> Tuple[List[float], dict]:
+        """
+        Derivación con 2 puntos hacia adelante
+        f'(x) ≈ (f(x+h) - f(x)) / h
+        
+        Args:
+            x: Lista de valores x
+            y: Lista de valores y (función en los puntos)
+            h: Tamaño del paso
+        
+        Returns:
+            Tupla (derivadas, detalles_cálculo)
+        """
+        x = np.array(x, dtype=float)
+        y = np.array(y, dtype=float)
+        n = len(x)
+        
+        if n < 2:
+            raise ValueError("Se necesitan al menos 2 puntos")
+        
+        derivadas = []
+        calculos = []
+        
+        for i in range(n):
+            if i == n - 1:
+                # No se puede calcular en el último punto
+                derivada = None
+                calculo = "No calculable (último punto)"
+            else:
+                # Fórmula: f'(x) = (f(x+h) - f(x)) / h
+                derivada = (y[i+1] - y[i]) / h
+                calculo = f"({y[i+1]:.6f} - {y[i]:.6f}) / {h}"
+            
+            derivadas.append(derivada)
+            calculos.append(calculo)
+        
+        detalles = {
+            'metodo': 'Derivación 2 Puntos Hacia Adelante',
+            'nodos_x': x.tolist(),
+            'nodos_y': y.tolist(),
+            'paso': h,
+            'derivadas': [d.tolist() if isinstance(d, (np.ndarray, float)) and d is not None else d for d in derivadas],
+            'calculos': calculos
+        }
+        
+        return derivadas, detalles
+    
+    @staticmethod
     def dos_puntos_atras(x: List[float], y: List[float], h: float) -> Tuple[List[float], dict]:
+        """
+        Derivación con 2 puntos hacia atrás
+        f'(x) ≈ (f(x) - f(x-h)) / h
+        
+        Args:
+            x: Lista de valores x
+            y: Lista de valores y (función en los puntos)
+            h: Tamaño del paso
+        
+        Returns:
+            Tupla (derivadas, detalles_cálculo)
+        """
+        x = np.array(x, dtype=float)
+        y = np.array(y, dtype=float)
+        n = len(x)
+        
+        if n < 2:
+            raise ValueError("Se necesitan al menos 2 puntos")
+        
+        derivadas = []
+        calculos = []
+        
+        for i in range(n):
+            if i == 0:
+                # No se puede calcular en el primer punto
+                derivada = None
+                calculo = "No calculable (primer punto)"
+            else:
+                # Fórmula: f'(x) = (f(x) - f(x-h)) / h
+                derivada = (y[i] - y[i-1]) / h
+                calculo = f"({y[i]:.6f} - {y[i-1]:.6f}) / {h}"
+            
+            derivadas.append(derivada)
+            calculos.append(calculo)
+        
+        detalles = {
+            'metodo': 'Derivación 2 Puntos Hacia Atrás',
+            'nodos_x': x.tolist(),
+            'nodos_y': y.tolist(),
+            'paso': h,
+            'derivadas': [d.tolist() if isinstance(d, (np.ndarray, float)) and d is not None else d for d in derivadas],
+            'calculos': calculos
+        }
+        
+        return derivadas, detalles
+    
+    @staticmethod
+    def tres_puntos_adelante(x: List[float], y: List[float], h: float) -> Tuple[List[float], dict]:
+        """
+        Derivación con 3 puntos hacia adelante
+        f'(x) ≈ (-3f(x) + 4f(x+h) - f(x+2h)) / (2h)
+        
+        Args:
+            x: Lista de valores x
+            y: Lista de valores y (función en los puntos)
+            h: Tamaño del paso
+        
+        Returns:
+            Tupla (derivadas, detalles_cálculo)
+        """
+        x = np.array(x, dtype=float)
+        y = np.array(y, dtype=float)
+        n = len(x)
+        
+        if n < 3:
+            raise ValueError("Se necesitan al menos 3 puntos")
+        
+        derivadas = []
+        calculos = []
+        
+        for i in range(n):
+            if i >= n - 2:
+                # No se puede calcular en los dos últimos puntos
+                derivada = None
+                calculo = "No calculable"
+            else:
+                # Fórmula: f'(x) = (-3f(x) + 4f(x+h) - f(x+2h)) / (2h)
+                derivada = (-3 * y[i] + 4 * y[i+1] - y[i+2]) / (2 * h)
+                calculo = f"(-3*{y[i]:.6f} + 4*{y[i+1]:.6f} - {y[i+2]:.6f}) / {2*h}"
+            
+            derivadas.append(derivada)
+            calculos.append(calculo)
+        
+        detalles = {
+            'metodo': 'Derivación 3 Puntos Hacia Adelante',
+            'nodos_x': x.tolist(),
+            'nodos_y': y.tolist(),
+            'paso': h,
+            'derivadas': [d.tolist() if isinstance(d, (np.ndarray, float)) and d is not None else d for d in derivadas],
+            'calculos': calculos
+        }
+        
+        return derivadas, detalles
+    
+    @staticmethod
+    def tres_puntos_atras(x: List[float], y: List[float], h: float) -> Tuple[List[float], dict]:
+        """
+        Derivación con 3 puntos hacia atrás
+        f'(x) ≈ (3f(x) - 4f(x-h) + f(x-2h)) / (2h)
+        
+        Args:
+            x: Lista de valores x
+            y: Lista de valores y (función en los puntos)
+            h: Tamaño del paso
+        
+        Returns:
+            Tupla (derivadas, detalles_cálculo)
+        """
+        x = np.array(x, dtype=float)
+        y = np.array(y, dtype=float)
+        n = len(x)
+        
+        if n < 3:
+            raise ValueError("Se necesitan al menos 3 puntos")
+        
+        derivadas = []
+        calculos = []
+        
+        for i in range(n):
+            if i < 2:
+                # No se puede calcular en los dos primeros puntos
+                derivada = None
+                calculo = "No calculable"
+            else:
+                # Fórmula: f'(x) = (3f(x) - 4f(x-h) + f(x-2h)) / (2h)
+                derivada = (3 * y[i] - 4 * y[i-1] + y[i-2]) / (2 * h)
+                calculo = f"(3*{y[i]:.6f} - 4*{y[i-1]:.6f} + {y[i-2]:.6f}) / {2*h}"
+            
+            derivadas.append(derivada)
+            calculos.append(calculo)
+        
+        detalles = {
+            'metodo': 'Derivación 3 Puntos Hacia Atrás',
+            'nodos_x': x.tolist(),
+            'nodos_y': y.tolist(),
+            'paso': h,
+            'derivadas': [d.tolist() if isinstance(d, (np.ndarray, float)) and d is not None else d for d in derivadas],
+            'calculos': calculos
+        }
+        
+        return derivadas, detalles
+    
+    @staticmethod
+    def dos_puntos_centrada(x: List[float], y: List[float], h: float) -> Tuple[List[float], dict]:
+        """
+        Derivación con 2 puntos centrada
+        f'(x) ≈ (f(x+h) - f(x-h)) / (2h)
+        
+        Args:
+            x: Lista de valores x
+            y: Lista de valores y (función en los puntos)
+            h: Tamaño del paso
+        
+        Returns:
+            Tupla (derivadas, detalles_cálculo)
+        """
+        x = np.array(x, dtype=float)
+        y = np.array(y, dtype=float)
+        n = len(x)
+        
+        if n < 3:
+            raise ValueError("Se necesitan al menos 3 puntos para derivación centrada")
+        
+        derivadas = []
+        calculos = []
+        
+        for i in range(n):
+            if i == 0 or i == n - 1:
+                # No se puede calcular en los extremos
+                derivada = None
+                calculo = "No calculable (punto extremo)"
+            else:
+                # Fórmula: f'(x) = (f(x+h) - f(x-h)) / (2h)
+                derivada = (y[i+1] - y[i-1]) / (2 * h)
+                calculo = f"({y[i+1]:.6f} - {y[i-1]:.6f}) / {2*h}"
+            
+            derivadas.append(derivada)
+            calculos.append(calculo)
+        
+        detalles = {
+            'metodo': 'Derivación 2 Puntos Centrada',
+            'nodos_x': x.tolist(),
+            'nodos_y': y.tolist(),
+            'paso': h,
+            'derivadas': [d.tolist() if isinstance(d, (np.ndarray, float)) and d is not None else d for d in derivadas],
+            'calculos': calculos
+        }
+        
+        return derivadas, detalles
+    
+    @staticmethod
+    def tres_puntos_centrada(x: List[float], y: List[float], h: float) -> Tuple[List[float], dict]:
+        """
+        Derivación con 3 puntos centrada
+        f'(x) ≈ (-f(x+h) + f(x-h)) / (2h)
+        
+        Args:
+            x: Lista de valores x
+            y: Lista de valores y (función en los puntos)
+            h: Tamaño del paso
+        
+        Returns:
+            Tupla (derivadas, detalles_cálculo)
+        """
+        x = np.array(x, dtype=float)
+        y = np.array(y, dtype=float)
+        n = len(x)
+        
+        if n < 3:
+            raise ValueError("Se necesitan al menos 3 puntos")
+        
+        derivadas = []
+        calculos = []
+        
+        for i in range(n):
+            if i == 0 or i == n - 1:
+                # No se puede calcular en los extremos
+                derivada = None
+                calculo = "No calculable (punto extremo)"
+            else:
+                # Fórmula: f'(x) = (-f(x+h) + f(x-h)) / (2h)
+                derivada = (-y[i+1] + y[i-1]) / (2 * h)
+                calculo = f"(-{y[i+1]:.6f} + {y[i-1]:.6f}) / {2*h}"
+            
+            derivadas.append(derivada)
+            calculos.append(calculo)
+        
+        detalles = {
+            'metodo': 'Derivación 3 Puntos Centrada',
+            'nodos_x': x.tolist(),
+            'nodos_y': y.tolist(),
+            'paso': h,
+            'derivadas': [d.tolist() if isinstance(d, (np.ndarray, float)) and d is not None else d for d in derivadas],
+            'calculos': calculos
+        }
+        
+        return derivadas, detalles
+    
+    @staticmethod
+    def cinco_puntos_adelante(x: List[float], y: List[float], h: float) -> Tuple[List[float], dict]:
+        """
+        Derivación con 5 puntos hacia adelante
+        f'(x) ≈ (-11f(x) + 18f(x+h) - 9f(x+2h) + 2f(x+3h)) / (6h)
+        
+        Args:
+            x: Lista de valores x
+            y: Lista de valores y (función en los puntos)
+            h: Tamaño del paso
+        
+        Returns:
+            Tupla (derivadas, detalles_cálculo)
+        """
+        x = np.array(x, dtype=float)
+        y = np.array(y, dtype=float)
+        n = len(x)
+        
+        if n < 4:
+            raise ValueError("Se necesitan al menos 4 puntos")
+        
+        derivadas = []
+        calculos = []
+        
+        for i in range(n):
+            if i >= n - 3:
+                # No se puede calcular en los últimos 3 puntos
+                derivada = None
+                calculo = "No calculable"
+            else:
+                # Fórmula: f'(x) = (-11f(x) + 18f(x+h) - 9f(x+2h) + 2f(x+3h)) / (6h)
+                derivada = (-11 * y[i] + 18 * y[i+1] - 9 * y[i+2] + 2 * y[i+3]) / (6 * h)
+                calculo = f"(-11*{y[i]:.6f} + 18*{y[i+1]:.6f} - 9*{y[i+2]:.6f} + 2*{y[i+3]:.6f}) / {6*h}"
+            
+            derivadas.append(derivada)
+            calculos.append(calculo)
+        
+        detalles = {
+            'metodo': 'Derivación 5 Puntos Hacia Adelante',
+            'nodos_x': x.tolist(),
+            'nodos_y': y.tolist(),
+            'paso': h,
+            'derivadas': [d.tolist() if isinstance(d, (np.ndarray, float)) and d is not None else d for d in derivadas],
+            'calculos': calculos
+        }
+        
+        return derivadas, detalles
+    
+    @staticmethod
+    def cinco_puntos_atras(x: List[float], y: List[float], h: float) -> Tuple[List[float], dict]:
+        """
+        Derivación con 5 puntos hacia atrás
+        f'(x) ≈ (-2f(x-3h) + 9f(x-2h) - 18f(x-h) + 11f(x)) / (6h)
+        
+        Args:
+            x: Lista de valores x
+            y: Lista de valores y (función en los puntos)
+            h: Tamaño del paso
+        
+        Returns:
+            Tupla (derivadas, detalles_cálculo)
+        """
+        x = np.array(x, dtype=float)
+        y = np.array(y, dtype=float)
+        n = len(x)
+        
+        if n < 4:
+            raise ValueError("Se necesitan al menos 4 puntos")
+        
+        derivadas = []
+        calculos = []
+        
+        for i in range(n):
+            if i < 3:
+                # No se puede calcular en los primeros 3 puntos
+                derivada = None
+                calculo = "No calculable"
+            else:
+                # Fórmula: f'(x) = (-2f(x-3h) + 9f(x-2h) - 18f(x-h) + 11f(x)) / (6h)
+                derivada = (-2 * y[i-3] + 9 * y[i-2] - 18 * y[i-1] + 11 * y[i]) / (6 * h)
+                calculo = f"(-2*{y[i-3]:.6f} + 9*{y[i-2]:.6f} - 18*{y[i-1]:.6f} + 11*{y[i]:.6f}) / {6*h}"
+            
+            derivadas.append(derivada)
+            calculos.append(calculo)
+        
+        detalles = {
+            'metodo': 'Derivación 5 Puntos Hacia Atrás',
+            'nodos_x': x.tolist(),
+            'nodos_y': y.tolist(),
+            'paso': h,
+            'derivadas': [d.tolist() if isinstance(d, (np.ndarray, float)) and d is not None else d for d in derivadas],
+            'calculos': calculos
+        }
+        
+        return derivadas, detalles
+    
+    @staticmethod
+    def cinco_puntos_centrada(x: List[float], y: List[float], h: float) -> Tuple[List[float], dict]:
         """
         Derivación con 2 puntos hacia atrás
         f'(x) ≈ (f(x) - f(x-h)) / h

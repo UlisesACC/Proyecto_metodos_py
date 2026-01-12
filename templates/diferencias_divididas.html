@@ -235,21 +235,21 @@
         <div class="section">
             <h2>Selecciona un Método</h2>
             <div class="method-options">
-                <label class="option-label">
-                    <input type="radio" name="metodo" value="adelante" checked>
-                    <span>Diferencias Hacia Adelante</span>
+                <div class="option-label">
+                    <input type="radio" name="metodo" value="adelante" id="opt_adelante" checked>
+                    <label for="opt_adelante">Diferencias Hacia Adelante</label>
                     <button type="button" class="formula-button" onclick="mostrarFormula('adelante')">Ver fórmula</button>
-                </label>
-                <label class="option-label">
-                    <input type="radio" name="metodo" value="atras">
-                    <span>Diferencias Hacia Atrás</span>
+                </div>
+                <div class="option-label">
+                    <input type="radio" name="metodo" value="atras" id="opt_atras">
+                    <label for="opt_atras">Diferencias Hacia Atrás</label>
                     <button type="button" class="formula-button" onclick="mostrarFormula('atras')">Ver fórmula</button>
-                </label>
-                <label class="option-label">
-                    <input type="radio" name="metodo" value="neville">
-                    <span>Neville</span>
+                </div>
+                <div class="option-label">
+                    <input type="radio" name="metodo" value="neville" id="opt_neville">
+                    <label for="opt_neville">Neville</label>
                     <button type="button" class="formula-button" onclick="mostrarFormula('neville')">Ver fórmula</button>
-                </label>
+                </div>
             </div>
         </div>
 
@@ -327,7 +327,7 @@
             },
             atras: {
                 titulo: "Diferencias Divididas Hacia Atrás",
-                latex: "P(x) = f[x_n] + f[x_n, x_{n-1}](x-x_n) + f[x_n, x_{n-1}, x_{n-2}](x-x_n)(x-x_{n-1}) + \\cdots"
+                latex: "f[x_i, x_{i-1}, \\ldots, x_{i-j}] = \\frac{f[x_{i-1}, \\ldots, x_{i-j}] - f[x_i, x_{i-1}, \\ldots, x_{i-j+1}]}{x_{i-j} - x_i}"
             },
             neville: {
                 titulo: "Interpolación de Neville",
