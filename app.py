@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import numpy as np
-from metodos.metodos import DiferenciasFinitas, Derivacion, Integracion, SistemasLineales, EcuacionesDiferenciales
+from metodos.metodos import DiferenciasFinitas, Derivacion, Integracion, SistemasLineales, EcuacionesDiferenciales, EcuacionesUnaVariable
 
 app = Flask(__name__)
 
@@ -33,6 +33,11 @@ def sistemas_lineales():
 def ecuaciones_diferenciales():
     """Página de ecuaciones diferenciales"""
     return render_template('ecuaciones_diferenciales.html')
+
+@app.route('/ecuaciones-una-variable')
+def ecuaciones_una_variable():
+    """Página de solución de ecuaciones de una variable"""
+    return render_template('ecuaciones_una_variable.html')
 
 @app.route('/api/health', methods=['GET'])
 def health():
@@ -352,5 +357,122 @@ def api_ecuaciones_diferenciales():
     except Exception as e:
         return jsonify({'error': f'Error en el cálculo: {str(e)}'}), 500
 
-if __name__ == '__main__':
+@app.route('/api/ecuaciones-una-variable', methods=['POST'])
+def api_ecuaciones_una_variable():
+    """API para resolver ecuaciones de una variable"""
+    try:
+        datos = request.get_json()
+        
+        if not datos:
+            return jsonify({'error': 'No se recibieron datos'}), 400
+        
+        metodo = datos.get('metodo')
+        funcion = datos.get('funcion')
+        tolerancia = datos.get('tolerancia', 1e-5)
+        max_iteraciones = datos.get('max_iteraciones', 100)
+        
+        if not all([metodo, funcion]):
+            return jsonify({'error': 'Faltan campos requeridos'}), 400
+        
+        try:
+            tolerancia = float(tolerancia)
+            max_iteraciones = int(max_iteraciones)
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Datos inválidos'}), 400
+        
+        # Ejecutar método seleccionado
+        if metodo == 'biseccion':
+            a = datos.get('a')
+            b = datos.get('b')
+            if not all([a is not None, b is not None]):
+                return jsonify({'error': 'Se requieren a y b para bisección'}), 400
+            try:
+                a = float(a)
+                b = float(b)
+            except (ValueError, TypeError):
+                return jsonify({'error': 'a y b deben ser números'}), 400
+            
+            raiz, detalles = EcuacionesUnaVariable.biseccion(funcion, a, b, tolerancia, max_iteraciones)
+            
+        elif metodo == 'falsa_posicion':
+            a = datos.get('a')
+            b = datos.get('b')
+            if not all([a is not None, b is not None]):
+                return jsonify({'error': 'Se requieren a y b para falsa posición'}), 400
+            try:
+                a = float(a)
+                b = float(b)
+            except (ValueError, TypeError):
+                return jsonify({'error': 'a y b deben ser números'}), 400
+            
+            raiz, detalles = EcuacionesUnaVariable.falsa_posicion(funcion, a, b, tolerancia, max_iteraciones)
+            
+        elif metodo == 'secante':
+            x0 = datos.get('x0')
+            x1 = datos.get('x1')
+            if not all([x0 is not None, x1 is not None]):
+                return jsonify({'error': 'Se requieren x0 y x1 para secante'}), 400
+            try:
+                x0 = float(x0)
+                x1 = float(x1)
+            except (ValueError, TypeError):
+                return jsonify({'error': 'x0 y x1 deben ser números'}), 400
+            
+            raiz, detalles = EcuacionesUnaVariable.secante(funcion, x0, x1, tolerancia, max_iteraciones)
+            
+        elif metodo == 'newton_raphson':
+            x0 = datos.get('x0')
+            derivada = datos.get('derivada')
+            if not all([x0 is not None, derivada]):
+                return jsonify({'error': 'Se requieren x0 y derivada para Newton-Raphson'}), 400
+            try:
+                x0 = float(x0)
+            except (ValueError, TypeError):
+                return jsonify({'error': 'x0 debe ser un número'}), 400
+            
+            raiz, detalles = EcuacionesUnaVariable.newton_raphson(funcion, derivada, x0, tolerancia, max_iteraciones)
+            
+        elif metodo == 'punto_fijo':
+            x0 = datos.get('x0')
+            g = datos.get('g')
+            if not all([x0 is not None, g]):
+                return jsonify({'error': 'Se requieren x0 y g para punto fijo'}), 400
+            try:
+                x0 = float(x0)
+            except (ValueError, TypeError):
+                return jsonify({'error': 'x0 debe ser un número'}), 400
+            
+            raiz, detalles = EcuacionesUnaVariable.punto_fijo(g, x0, tolerancia, max_iteraciones)
+            
+        elif metodo == 'muller':
+            x0 = datos.get('x0')
+            x1 = datos.get('x1')
+            x2 = datos.get('x2')
+            if not all([x0 is not None, x1 is not None, x2 is not None]):
+                return jsonify({'error': 'Se requieren x0, x1 y x2 para Müller'}), 400
+            try:
+                x0 = float(x0)
+                x1 = float(x1)
+                x2 = float(x2)
+            except (ValueError, TypeError):
+                return jsonify({'error': 'x0, x1 y x2 deben ser números'}), 400
+            
+            raiz, detalles = EcuacionesUnaVariable.muller(funcion, x0, x1, x2, tolerancia, max_iteraciones)
+            
+        else:
+            return jsonify({'error': 'Método no válido'}), 400
+        
+        return jsonify({
+            'raiz': raiz,
+            'fx': detalles['fx'],
+            'iteraciones': detalles['iteraciones'],
+            'error_estimado': detalles['error_estimado'],
+            'historial': detalles['historial'],
+            'metodo': detalles['metodo']
+        }), 200
+    
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': f'Error en el cálculo: {str(e)}'}), 500
     app.run(debug=True, host='0.0.0.0', port=5000)

@@ -1709,3 +1709,433 @@ class EcuacionesDiferenciales:
         }
         
         return x, y, detalles
+
+
+class EcuacionesUnaVariable:
+    """Métodos para resolver ecuaciones de una variable: f(x) = 0"""
+    
+    # Funciones matemáticas disponibles para eval
+    _math_functions = {
+        'sqrt': np.sqrt,
+        'sin': np.sin,
+        'cos': np.cos,
+        'tan': np.tan,
+        'exp': np.exp,
+        'log': np.log,
+        'log10': np.log10,
+        'abs': abs,
+        'pi': np.pi,
+        'e': np.e
+    }
+    
+    @staticmethod
+    def _eval_function(expr: str, x: float) -> float:
+        """Evalúa una expresión con soporte para funciones matemáticas"""
+        try:
+            # Reemplazar x con el valor
+            expr_repl = expr.replace('x', f'({x})')
+            # Evaluar con las funciones matemáticas disponibles
+            return eval(expr_repl, {"__builtins__": {}}, EcuacionesUnaVariable._math_functions)
+        except Exception as e:
+            raise ValueError(f"Error al evaluar la función: {str(e)}")
+    
+    @staticmethod
+    def biseccion(f_expr: str, a: float, b: float, tolerancia: float = 1e-5, max_iteraciones: int = 100) -> Tuple[float, dict]:
+        """
+        Método de Bisección
+        
+        Encuentra la raíz de f(x) = 0 en el intervalo [a, b]
+        
+        Args:
+            f_expr: Función como string (ej: 'x**2 - 4')
+            a: Límite inferior del intervalo
+            b: Límite superior del intervalo
+            tolerancia: Criterio de convergencia
+            max_iteraciones: Número máximo de iteraciones
+        
+        Returns:
+            Tupla (raíz, detalles con historial de iteraciones)
+        """
+        # Verificar que haya cambio de signo
+        fa = EcuacionesUnaVariable._eval_function(f_expr, a)
+        fb = EcuacionesUnaVariable._eval_function(f_expr, b)
+        
+        if fa * fb > 0:
+            raise ValueError("No hay cambio de signo en el intervalo [a, b]. f(a) y f(b) deben tener signos opuestos")
+        
+        historial = []
+        
+        for i in range(max_iteraciones):
+            c = (a + b) / 2
+            fc = EcuacionesUnaVariable._eval_function(f_expr, c)
+            
+            error = abs(b - a)
+            
+            historial.append({
+                'x': c,
+                'fx': fc,
+                'error': error
+            })
+            
+            if abs(fc) < tolerancia or error < tolerancia:
+                return c, {
+                    'metodo': 'Bisección',
+                    'raiz': c,
+                    'fx': fc,
+                    'iteraciones': i + 1,
+                    'error_estimado': error,
+                    'historial': historial
+                }
+            
+            if fa * fc < 0:
+                b = c
+                fb = fc
+            else:
+                a = c
+                fa = fc
+        
+        c = (a + b) / 2
+        fc = EcuacionesUnaVariable._eval_function(f_expr, c)
+        
+        return c, {
+            'metodo': 'Bisección',
+            'raiz': c,
+            'fx': fc,
+            'iteraciones': max_iteraciones,
+            'error_estimado': abs(b - a),
+            'historial': historial
+        }
+    
+    @staticmethod
+    def falsa_posicion(f_expr: str, a: float, b: float, tolerancia: float = 1e-5, max_iteraciones: int = 100) -> Tuple[float, dict]:
+        """
+        Método de Falsa Posición (Regula Falsi)
+        
+        Args:
+            f_expr: Función como string
+            a: Límite inferior
+            b: Límite superior
+            tolerancia: Criterio de convergencia
+            max_iteraciones: Número máximo de iteraciones
+        
+        Returns:
+            Tupla (raíz, detalles)
+        """
+        fa = EcuacionesUnaVariable._eval_function(f_expr, a)
+        fb = EcuacionesUnaVariable._eval_function(f_expr, b)
+        
+        if fa * fb > 0:
+            raise ValueError("No hay cambio de signo en el intervalo [a, b]")
+        
+        historial = []
+        x_anterior = a
+        
+        for i in range(max_iteraciones):
+            # Fórmula de falsa posición
+            c = (a * fb - b * fa) / (fb - fa)
+            fc = EcuacionesUnaVariable._eval_function(f_expr, c)
+            
+            error = abs(c - x_anterior)
+            
+            historial.append({
+                'x': c,
+                'fx': fc,
+                'error': error
+            })
+            
+            if abs(fc) < tolerancia or error < tolerancia:
+                return c, {
+                    'metodo': 'Falsa Posición',
+                    'raiz': c,
+                    'fx': fc,
+                    'iteraciones': i + 1,
+                    'error_estimado': error,
+                    'historial': historial
+                }
+            
+            if fa * fc < 0:
+                b = c
+                fb = fc
+            else:
+                a = c
+                fa = fc
+            
+            x_anterior = c
+        
+        return c, {
+            'metodo': 'Falsa Posición',
+            'raiz': c,
+            'fx': fc,
+            'iteraciones': max_iteraciones,
+            'error_estimado': error,
+            'historial': historial
+        }
+    
+    @staticmethod
+    def secante(f_expr: str, x0: float, x1: float, tolerancia: float = 1e-5, max_iteraciones: int = 100) -> Tuple[float, dict]:
+        """
+        Método de la Secante
+        
+        Args:
+            f_expr: Función como string
+            x0: Primer punto inicial
+            x1: Segundo punto inicial
+            tolerancia: Criterio de convergencia
+            max_iteraciones: Número máximo de iteraciones
+        
+        Returns:
+            Tupla (raíz, detalles)
+        """
+        f0 = EcuacionesUnaVariable._eval_function(f_expr, x0)
+        f1 = EcuacionesUnaVariable._eval_function(f_expr, x1)
+        
+        historial = []
+        
+        for i in range(max_iteraciones):
+            if abs(f1 - f0) < 1e-15:
+                raise ValueError("Denominador muy pequeño - la función es casi horizontal")
+            
+            # Fórmula de la secante: x2 = x1 - f1 * (x1 - x0) / (f1 - f0)
+            x2 = x1 - f1 * (x1 - x0) / (f1 - f0)
+            f2 = EcuacionesUnaVariable._eval_function(f_expr, x2)
+            
+            error = abs(x2 - x1)
+            
+            historial.append({
+                'x': x2,
+                'fx': f2,
+                'error': error
+            })
+            
+            if abs(f2) < tolerancia or error < tolerancia:
+                return x2, {
+                    'metodo': 'Secante',
+                    'raiz': x2,
+                    'fx': f2,
+                    'iteraciones': i + 1,
+                    'error_estimado': error,
+                    'historial': historial
+                }
+            
+            x0, x1 = x1, x2
+            f0, f1 = f1, f2
+        
+        return x2, {
+            'metodo': 'Secante',
+            'raiz': x2,
+            'fx': f2,
+            'iteraciones': max_iteraciones,
+            'error_estimado': error,
+            'historial': historial
+        }
+    
+    @staticmethod
+    def newton_raphson(f_expr: str, df_expr: str, x0: float, tolerancia: float = 1e-5, max_iteraciones: int = 100) -> Tuple[float, dict]:
+        """
+        Método de Newton-Raphson
+        
+        Args:
+            f_expr: Función como string
+            df_expr: Derivada como string
+            x0: Punto inicial
+            tolerancia: Criterio de convergencia
+            max_iteraciones: Número máximo de iteraciones
+        
+        Returns:
+            Tupla (raíz, detalles)
+        """
+        historial = []
+        x = x0
+        
+        for i in range(max_iteraciones):
+            f_val = EcuacionesUnaVariable._eval_function(f_expr, x)
+            df_val = EcuacionesUnaVariable._eval_function(df_expr, x)
+            
+            if abs(df_val) < 1e-15:
+                raise ValueError("La derivada es cero o muy cercana a cero")
+            
+            x_new = x - f_val / df_val
+            error = abs(x_new - x)
+            
+            historial.append({
+                'x': x_new,
+                'fx': EcuacionesUnaVariable._eval_function(f_expr, x_new),
+                'error': error
+            })
+            
+            if abs(f_val) < tolerancia or error < tolerancia:
+                return x_new, {
+                    'metodo': 'Newton-Raphson',
+                    'raiz': x_new,
+                    'fx': EcuacionesUnaVariable._eval_function(f_expr, x_new),
+                    'iteraciones': i + 1,
+                    'error_estimado': error,
+                    'historial': historial
+                }
+            
+            x = x_new
+        
+        f_final = EcuacionesUnaVariable._eval_function(f_expr, x)
+        
+        return x, {
+            'metodo': 'Newton-Raphson',
+            'raiz': x,
+            'fx': f_final,
+            'iteraciones': max_iteraciones,
+            'error_estimado': error,
+            'historial': historial
+        }
+    
+    @staticmethod
+    def punto_fijo(g_expr: str, x0: float, tolerancia: float = 1e-5, max_iteraciones: int = 100) -> Tuple[float, dict]:
+        """
+        Método de Punto Fijo
+        
+        Resuelve x = g(x), encontrando raíces de f(x) = x - g(x) = 0
+        
+        Args:
+            g_expr: Función de iteración como string (ej: 'x/2 + 1')
+            x0: Punto inicial
+            tolerancia: Criterio de convergencia
+            max_iteraciones: Número máximo de iteraciones
+        
+        Returns:
+            Tupla (raíz, detalles)
+        """
+        historial = []
+        x = x0
+        
+        for i in range(max_iteraciones):
+            x_new = EcuacionesUnaVariable._eval_function(g_expr, x)
+            error = abs(x_new - x)
+            
+            # f(x) = x - g(x) en el nuevo punto
+            fx = x_new - EcuacionesUnaVariable._eval_function(g_expr, x_new)
+            
+            historial.append({
+                'x': x_new,
+                'fx': fx,
+                'error': error
+            })
+            
+            if error < tolerancia:
+                return x_new, {
+                    'metodo': 'Punto Fijo',
+                    'raiz': x_new,
+                    'fx': fx,
+                    'iteraciones': i + 1,
+                    'error_estimado': error,
+                    'historial': historial
+                }
+            
+            x = x_new
+        
+        fx = x - EcuacionesUnaVariable._eval_function(g_expr, x)
+        
+        return x, {
+            'metodo': 'Punto Fijo',
+            'raiz': x,
+            'fx': fx,
+            'iteraciones': max_iteraciones,
+            'error_estimado': error,
+            'historial': historial
+        }
+    
+    @staticmethod
+    def muller(f_expr: str, x0: float, x1: float, x2: float, tolerancia: float = 1e-5, max_iteraciones: int = 100) -> Tuple[float, dict]:
+        """
+        Método de Müller
+        
+        Utiliza tres puntos iniciales y ajusta parábolas para encontrar raíces.
+        Puede encontrar raíces complejas, aunque aquí trabajamos con reales.
+        
+        Args:
+            f_expr: Función como string
+            x0: Primer punto inicial
+            x1: Segundo punto inicial
+            x2: Tercer punto inicial
+            tolerancia: Criterio de convergencia
+            max_iteraciones: Número máximo de iteraciones
+        
+        Returns:
+            Tupla (raíz, detalles)
+        """
+        f0 = EcuacionesUnaVariable._eval_function(f_expr, x0)
+        f1 = EcuacionesUnaVariable._eval_function(f_expr, x1)
+        f2 = EcuacionesUnaVariable._eval_function(f_expr, x2)
+        
+        historial = []
+        
+        for i in range(max_iteraciones):
+            # Calcular diferencias divididas
+            h0 = x1 - x0
+            h1 = x2 - x1
+            
+            if abs(h0) < 1e-15 or abs(h1) < 1e-15:
+                raise ValueError("Los puntos iniciales están demasiado cercanos")
+            
+            d0 = (f1 - f0) / h0
+            d1 = (f2 - f1) / h1
+            
+            d2 = (d1 - d0) / (h1 + h0)
+            
+            # Coeficientes de la parábola: a*t^2 + b*t + c = 0
+            # donde t = x - x2
+            a = d2
+            b = d1 + h1 * d2
+            c = f2
+            
+            # Resolver la ecuación cuadrática
+            discriminante = b**2 - 4*a*c
+            
+            if abs(a) < 1e-15:
+                # Si a es muy pequeño, usar aproximación lineal
+                if abs(b) > 1e-15:
+                    x_new = x2 - c / b
+                else:
+                    raise ValueError("No se puede calcular la próxima aproximación")
+            else:
+                sqrt_disc = np.sqrt(abs(discriminante))
+                
+                # Usar la fórmula que da el denominador más grande para evitar cancelación
+                if b > 0:
+                    denominador = b + sqrt_disc
+                else:
+                    denominador = b - sqrt_disc
+                
+                if abs(denominador) > 1e-15:
+                    x_new = x2 - 2*c / denominador
+                else:
+                    raise ValueError("Denominador demasiado pequeño")
+            
+            f_new = EcuacionesUnaVariable._eval_function(f_expr, x_new)
+            error = abs(x_new - x2)
+            
+            historial.append({
+                'x': x_new,
+                'fx': f_new,
+                'error': error
+            })
+            
+            if abs(f_new) < tolerancia or error < tolerancia:
+                return x_new, {
+                    'metodo': 'Müller',
+                    'raiz': x_new,
+                    'fx': f_new,
+                    'iteraciones': i + 1,
+                    'error_estimado': error,
+                    'historial': historial
+                }
+            
+            # Actualizar puntos para la próxima iteración
+            x0, x1, x2 = x1, x2, x_new
+            f0, f1, f2 = f1, f2, f_new
+        
+        return x2, {
+            'metodo': 'Müller',
+            'raiz': x2,
+            'fx': f2,
+            'iteraciones': max_iteraciones,
+            'error_estimado': error,
+            'historial': historial
+        }
