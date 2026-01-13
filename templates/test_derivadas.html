@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Derivadas</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .result { background: #f0f0f0; padding: 10px; margin-top: 10px; }
+        input { padding: 5px; width: 300px; }
+        button { padding: 5px 15px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Test Endpoint de Derivadas</h1>
+    
+    <label>Expresión f(x,y):</label><br>
+    <input type="text" id="fExpr" value="y" placeholder="ej: x + y"><br><br>
+    
+    <button onclick="calcularDerivadas()">Calcular Derivadas</button><br>
+    
+    <div id="resultado" class="result" style="display:none;">
+        <h3>Resultado:</h3>
+        <pre id="resultContent"></pre>
+    </div>
+
+    <script>
+        async function calcularDerivadas() {
+            const fExpr = document.getElementById('fExpr').value;
+            const resultado = document.getElementById('resultado');
+            
+            try {
+                console.log('Enviando:', { f_expr: fExpr, orden: 3 });
+                
+                const response = await fetch('/api/calcular-derivadas', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        f_expr: fExpr,
+                        orden: 3
+                    })
+                });
+                
+                console.log('Status:', response.status);
+                const data = await response.json();
+                console.log('Response:', data);
+                
+                if (response.ok) {
+                    document.getElementById('resultContent').textContent = 
+                        'f(x,y) = ' + data.f_expr + '\n' +
+                        'df/dy = ' + data.df_expr + '\n' +
+                        'ddf/dy² = ' + data.ddf_expr + '\n' +
+                        'dddf/dy³ = ' + data.dddf_expr;
+                    resultado.style.display = 'block';
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error en la solicitud: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

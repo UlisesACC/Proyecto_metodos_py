@@ -1376,6 +1376,21 @@ class EcuacionesDiferenciales:
     """Métodos para resolver ecuaciones diferenciales ordinarias"""
     
     @staticmethod
+    def _eval_function(f_expr: str, x: float, y_values: List[float]) -> float:
+        """
+        Evalúa una función con las variables x, y1, y2, y3, ... (para sistemas)
+        """
+        # Reemplazar x
+        expr = f_expr.replace('x', str(x))
+        # Reemplazar y1, y2, y3, etc.
+        for i, y_val in enumerate(y_values, 1):
+            expr = expr.replace(f'y{i}', str(y_val))
+        # Para compatibilidad con código antiguo, si no hay y1, reemplazar y con el primer valor
+        if 'y' in expr and len(y_values) > 0:
+            expr = expr.replace('y', str(y_values[0]))
+        return eval(expr)
+    
+    @staticmethod
     def euler(x0: float, y0: float, xf: float, n: int, f_expr: str) -> Tuple[List, List, dict]:
         """
         Método de Euler
@@ -1709,6 +1724,113 @@ class EcuacionesDiferenciales:
         }
         
         return x, y, detalles
+    
+    # ================== MÉTODOS PARA SISTEMAS DE ECUACIONES ==================
+    
+    @staticmethod
+    def euler_sistema(x0: float, y0: List[float], xf: float, n: int, f_exprs: List[str]) -> Tuple[List, List[List], dict]:
+        """
+        Método de Euler para sistemas de ecuaciones diferenciales
+        
+        Args:
+            x0: Condición inicial x
+            y0: Condiciones iniciales [y1_0, y2_0, ...]
+            xf: Valor final de x
+            n: Número de pasos
+            f_exprs: Lista de funciones como strings (ej: ['y2', '-y1'])
+        
+        Returns:
+            Tupla (x_valores, [[y1_vals], [y2_vals], ...], detalles)
+        """
+        h = (xf - x0) / n
+        x = [x0]
+        num_vars = len(y0)
+        y_vals = [[y0[i]] for i in range(num_vars)]  # Inicializar para cada variable
+        
+        for step in range(n):
+            xi = x[-1]
+            yi = [y_vals[i][-1] for i in range(num_vars)]  # Obtener últimos valores
+            
+            # Calcular pendientes para cada ecuación
+            slopes = []
+            for f_expr in f_exprs:
+                slope = EcuacionesDiferenciales._eval_function(f_expr, xi, yi)
+                slopes.append(slope)
+            
+            # Actualizar valores
+            for i in range(num_vars):
+                y_new = yi[i] + h * slopes[i]
+                y_vals[i].append(y_new)
+            
+            x.append(xi + h)
+        
+        detalles = {
+            'metodo': 'Euler (Sistema)',
+            'x0': x0,
+            'y0': y0,
+            'xf': xf,
+            'n': n,
+            'h': h,
+            'funciones': f_exprs
+        }
+        
+        return x, y_vals, detalles
+    
+    @staticmethod
+    def runge_kutta_4_sistema(x0: float, y0: List[float], xf: float, n: int, f_exprs: List[str]) -> Tuple[List, List[List], dict]:
+        """
+        Método de Runge-Kutta orden 4 para sistemas de ecuaciones diferenciales
+        """
+        h = (xf - x0) / n
+        x = [x0]
+        num_vars = len(y0)
+        y_vals = [[y0[i]] for i in range(num_vars)]
+        
+        for step in range(n):
+            xi = x[-1]
+            yi = [y_vals[i][-1] for i in range(num_vars)]
+            
+            # Calcular k1
+            k1 = []
+            for f_expr in f_exprs:
+                k1.append(EcuacionesDiferenciales._eval_function(f_expr, xi, yi))
+            
+            # Calcular k2
+            yi_k2 = [yi[i] + h/2 * k1[i] for i in range(num_vars)]
+            k2 = []
+            for f_expr in f_exprs:
+                k2.append(EcuacionesDiferenciales._eval_function(f_expr, xi + h/2, yi_k2))
+            
+            # Calcular k3
+            yi_k3 = [yi[i] + h/2 * k2[i] for i in range(num_vars)]
+            k3 = []
+            for f_expr in f_exprs:
+                k3.append(EcuacionesDiferenciales._eval_function(f_expr, xi + h/2, yi_k3))
+            
+            # Calcular k4
+            yi_k4 = [yi[i] + h * k3[i] for i in range(num_vars)]
+            k4 = []
+            for f_expr in f_exprs:
+                k4.append(EcuacionesDiferenciales._eval_function(f_expr, xi + h, yi_k4))
+            
+            # Actualizar valores
+            for i in range(num_vars):
+                y_new = yi[i] + (h / 6) * (k1[i] + 2*k2[i] + 2*k3[i] + k4[i])
+                y_vals[i].append(y_new)
+            
+            x.append(xi + h)
+        
+        detalles = {
+            'metodo': 'Runge-Kutta Orden 4 (Sistema)',
+            'x0': x0,
+            'y0': y0,
+            'xf': xf,
+            'n': n,
+            'h': h,
+            'funciones': f_exprs
+        }
+        
+        return x, y_vals, detalles
 
 
 class EcuacionesUnaVariable:

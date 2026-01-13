@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import numpy as np
+from sympy import symbols, diff, lambdify, parsing
 from metodos.metodos import DiferenciasFinitas, Derivacion, Integracion, SistemasLineales, EcuacionesDiferenciales, EcuacionesUnaVariable
 
 app = Flask(__name__)
@@ -39,10 +40,60 @@ def ecuaciones_una_variable():
     """Página de solución de ecuaciones de una variable"""
     return render_template('ecuaciones_una_variable.html')
 
+@app.route('/test-derivadas')
+def test_derivadas():
+    """Página de prueba para derivadas (DEBUG)"""
+    return render_template('test_derivadas.html')
+
 @app.route('/api/health', methods=['GET'])
 def health():
     """Endpoint de verificación de salud"""
     return jsonify({'status': 'ok', 'message': 'App de Métodos Numéricos funcionando'})
+
+@app.route('/api/calcular-derivadas', methods=['POST'])
+def api_calcular_derivadas():
+    """Calcular derivadas automáticamente"""
+    try:
+        datos = request.get_json()
+        f_expr = datos.get('f_expr', '')
+        orden = datos.get('orden', 1)  # 1, 2, 3 o 4
+        
+        if not f_expr:
+            return jsonify({'error': 'Se requiere una expresión'}), 400
+        
+        try:
+            # Crear símbolos para x e y (SIN real=True para que parsing.parse_expr funcione correctamente)
+            x, y = symbols('x y')
+            
+            # Parsear la expresión
+            expr = parsing.parse_expr(f_expr)
+            
+            # Calcular derivadas
+            derivatives = {}
+            current_expr = expr
+            
+            for i in range(1, int(orden) + 1):
+                # Derivar respecto a y (porque dy/dx depende de y)
+                # La derivada de f(x,y) respecto a x es: df/dx + df/dy * dy/dx
+                # Pero como dy/dx = f(x,y), necesitamos f'(x,y) = df/dy
+                
+                derivada_y = diff(current_expr, y)
+                derivatives[f'df_{i}'] = str(derivada_y)
+                current_expr = derivada_y
+            
+            return jsonify({
+                'f_expr': f_expr,
+                'df_expr': derivatives.get('df_1', '0'),
+                'ddf_expr': derivatives.get('df_2', '0'),
+                'dddf_expr': derivatives.get('df_3', '0'),
+                'orden': orden
+            }), 200
+            
+        except Exception as e:
+            return jsonify({'error': f'Error al calcular derivadas: {str(e)}'}), 400
+    
+    except Exception as e:
+        return jsonify({'error': f'Error en el servidor: {str(e)}'}), 500
 
 @app.route('/api/diferencias-divididas', methods=['POST'])
 def api_diferencias_divididas():
@@ -287,7 +338,7 @@ def api_sistemas_lineales():
 
 @app.route('/api/ecuaciones-diferenciales', methods=['POST'])
 def api_ecuaciones_diferenciales():
-    """API para resolver ecuaciones diferenciales"""
+    """API para resolver ecuaciones diferenciales (single o sistemas)"""
     try:
         datos = request.get_json()
         
@@ -296,21 +347,56 @@ def api_ecuaciones_diferenciales():
         
         metodo = datos.get('metodo')
         x0 = datos.get('x0')
-        y0 = datos.get('y0')
+        y0 = datos.get('y0')  # Puede ser número (single) o lista (sistema)
         xf = datos.get('xf')
         n = datos.get('n')
-        f_expr = datos.get('f_expr')
         
-        if not all([metodo, x0 is not None, y0 is not None, xf is not None, n, f_expr]):
+        # Verificar si es un sistema (functions) o ecuación única (f_expr)
+        functions = datos.get('functions')  # Lista de funciones para sistemas
+        f_expr = datos.get('f_expr')  # String para ecuación única
+        
+        if not all([metodo, x0 is not None, y0 is not None, xf is not None, n is not None]):
             return jsonify({'error': 'Faltan campos requeridos'}), 400
+        
+        # Determinar si es sistema o ecuación única
+        is_sistema = isinstance(y0, list) or functions is not None
         
         try:
             x0 = float(x0)
-            y0 = float(y0)
             xf = float(xf)
             n = int(n)
-        except (ValueError, TypeError):
-            return jsonify({'error': 'Datos inválidos'}), 400
+            
+            if is_sistema:
+                if not isinstance(y0, list):
+                    y0 = [y0]
+                y0 = [float(v) for v in y0]
+            else:
+                y0 = float(y0)
+        except (ValueError, TypeError) as e:
+            return jsonify({'error': f'Datos inválidos: {str(e)}'}), 400
+        
+        # RESOLVER SISTEMAS DE ECUACIONES
+        if is_sistema:
+            if not functions:
+                return jsonify({'error': 'Se requiere lista de funciones para sistema'}), 400
+            
+            if metodo == 'euler':
+                x_vals, y_vals, detalles = EcuacionesDiferenciales.euler_sistema(x0, y0, xf, n, functions)
+            elif metodo == 'rk4':
+                x_vals, y_vals, detalles = EcuacionesDiferenciales.runge_kutta_4_sistema(x0, y0, xf, n, functions)
+            else:
+                # Para otros métodos en sistema, usar RK4 por defecto
+                x_vals, y_vals, detalles = EcuacionesDiferenciales.runge_kutta_4_sistema(x0, y0, xf, n, functions)
+            
+            return jsonify({
+                'x_valores': x_vals,
+                'y_valores': y_vals,
+                'detalles': detalles
+            }), 200
+        
+        # RESOLVER ECUACIÓN ÚNICA (comportamiento original)
+        if not f_expr:
+            return jsonify({'error': 'Se requiere f_expr para ecuación única'}), 400
         
         if metodo == 'euler':
             x_vals, y_vals, detalles = EcuacionesDiferenciales.euler(x0, y0, xf, n, f_expr)
@@ -347,7 +433,7 @@ def api_ecuaciones_diferenciales():
         
         return jsonify({
             'x_valores': x_vals,
-            'y_valores': y_vals,
+            'y_valores': [y_vals],  # Envolver en lista para mantener formato consistente
             'detalles': detalles,
             'pares': list(zip(x_vals, y_vals))
         }), 200
@@ -475,4 +561,7 @@ def api_ecuaciones_una_variable():
         return jsonify({'error': str(e)}), 400
     except Exception as e:
         return jsonify({'error': f'Error en el cálculo: {str(e)}'}), 500
+
+
+if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ecuaciones de Una Variable - Métodos Numéricos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        .back-button {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background-color: #333;
+            color: white;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+
+        .section {
+            background: white;
+            border: 1px solid #999;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        /* Estilos del Acordeón */
+        .accordion {
+            border: 1px solid #999;
+        }
+
+        .accordion-item {
+            border-bottom: 1px solid #999;
+        }
+
+        .accordion-item:last-child {
+            border-bottom: none;
+        }
+
+        .accordion-header {
+            background-color: #f5f5f5;
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .accordion-header:hover {
+            background-color: #efefef;
+        }
+
+        .accordion-header.active {
+            background-color: #ddd;
+        }
+
+        .accordion-header::after {
+            content: '▼';
+            font-size: 0.8rem;
+        }
+
+        .accordion-header.active::after {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            display: none;
+            padding: 15px;
+            background-color: white;
+        }
+
+        .accordion-content.show {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group small {
+            display: block;
+            color: #666;
+            font-size: 0.85rem;
+            margin-top: 3px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #999;
+            font-size: 1rem;
+            font-family: monospace;
+            box-sizing: border-box;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-calcular {
+            background-color: #333;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-calcular:hover {
+            background-color: #555;
+        }
+
+        .btn-limpiar {
+            background-color: #ccc;
+            color: #000;
+        }
+
+        .btn-limpiar:hover {
+            background-color: #bbb;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .result-item {
+            background: #f9f9f9;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #333;
+        }
+
+        .result-item label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 3px;
+            display: block;
+        }
+
+        .result-item .value {
+            font-size: 1.1rem;
+            color: #000;
+            font-family: monospace;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        table th {
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #ddd;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .params-group {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #333;
+        }
+
+        .params-group h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .params-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .error-message {
+            color: #d32f2f;
+            background-color: #ffebee;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .success-message {
+            color: #1b5e20;
+            background-color: #e8f5e9;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1>Ecuaciones de Una Variable</h1>
+        </div>
+    </nav>
+
+    <main class="container">
+        <a href="/" class="back-button">← Volver al Inicio</a>
+
+        <div class="error-message" id="errorMsg"></div>
+        <div class="success-message" id="successMsg"></div>
+
+        <section class="section">
+            <h2>Parámetros</h2>
+
+            <div class="form-group">
+                <label for="metodo">Método:</label>
+                <select id="metodo" name="metodo" required>
+                    <option value="">-- Selecciona un método --</option>
+                    <option value="biseccion">Bisección</option>
+                    <option value="falsa_posicion">Falsa Posición</option>
+                    <option value="secante">Secante</option>
+                    <option value="newton_raphson">Newton-Raphson</option>
+                    <option value="punto_fijo">Punto Fijo</option>
+                    <option value="muller">Müller</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="funcion">Función f(x):</label>
+                <input type="text" id="funcion" name="funcion" placeholder="ej: x**2 - 4" required>
+                <small>Usa x como variable, ** para potencia, sqrt() para raíz, sin(), cos(), tan(), exp(), log()</small>
+            </div>
+
+            <!-- Parámetros: Intervalo [a, b] -->
+            <div id="params_intervalo" style="display: none;">
+                <div class="params-group">
+                    <h4>Intervalo [a, b]</h4>
+                    <div class="params-grid">
+                        <div class="form-group">
+                            <label for="a">a (límite inferior):</label>
+                            <input type="number" id="a" name="a" step="0.0001" placeholder="ej: -5">
+                        </div>
+                        <div class="form-group">
+                            <label for="b">b (límite superior):</label>
+                            <input type="number" id="b" name="b" step="0.0001" placeholder="ej: 5">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parámetros: Puntos iniciales -->
+            <div id="params_puntos" style="display: none;">
+                <div class="params-group">
+                    <h4>Puntos Iniciales</h4>
+                    <div class="params-grid">
+                        <div class="form-group">
+                            <label for="x0">x₀:</label>
+                            <input type="number" id="x0" name="x0" step="0.0001" placeholder="ej: 1">
+                        </div>
+                        <div id="x1_container" style="display: none;">
+                            <div class="form-group">
+                                <label for="x1">x₁:</label>
+                                <input type="number" id="x1" name="x1" step="0.0001" placeholder="ej: 2">
+                            </div>
+                        </div>
+                        <div id="x2_container" style="display: none;">
+                            <div class="form-group">
+                                <label for="x2">x₂:</label>
+                                <input type="number" id="x2" name="x2" step="0.0001" placeholder="ej: 3">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Derivada para Newton-Raphson -->
+            <div id="params_derivada" style="display: none;">
+                <div class="params-group">
+                    <h4>Derivada</h4>
+                    <div class="form-group">
+                        <label for="derivada">f'(x):</label>
+                        <input type="text" id="derivada" name="derivada" placeholder="ej: 2*x">
+                        <small>Derivada de f(x)</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Función de iteración para Punto Fijo -->
+            <div id="params_iteracion" style="display: none;">
+                <div class="params-group">
+                    <h4>Función de Iteración</h4>
+                    <div class="form-group">
+                        <label for="g">g(x) = (para resolver x = g(x)):</label>
+                        <input type="text" id="g" name="g" placeholder="ej: 4/x">
+                        <small>Función tal que x = g(x)</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuración común -->
+            <div class="params-group">
+                <h4>Configuración</h4>
+                <div class="params-grid">
+                    <div class="form-group">
+                        <label for="tolerancia">Tolerancia:</label>
+                        <input type="number" id="tolerancia" name="tolerancia" step="0.00001" value="0.00001">
+                    </div>
+                    <div class="form-group">
+                        <label for="max_iteraciones">Máx. iteraciones:</label>
+                        <input type="number" id="max_iteraciones" name="max_iteraciones" value="100">
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button type="button" class="btn-calcular" onclick="calcular()">Calcular</button>
+                <button type="button" class="btn-limpiar" onclick="limpiar()">Limpiar</button>
+            </div>
+        </section>
+
+        <!-- RESULTADOS -->
+        <section id="resultados" class="section results">
+            <h2>Resultados</h2>
+
+            <div class="result-item">
+                <label>Raíz encontrada:</label>
+                <div class="value" id="raiz">-</div>
+            </div>
+
+            <div class="result-item">
+                <label>f(x) en la raíz:</label>
+                <div class="value" id="fx">-</div>
+            </div>
+
+            <div class="result-item">
+                <label>Iteraciones realizadas:</label>
+                <div class="value" id="iteraciones">-</div>
+            </div>
+
+            <div class="result-item">
+                <label>Error estimado:</label>
+                <div class="value" id="error_estimado">-</div>
+            </div>
+
+            <h3>Historial de Iteraciones</h3>
+            <table id="tabla_resultados">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>x</th>
+                        <th>f(x)</th>
+                        <th>Error</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla_cuerpo">
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 App de Métodos Numéricos - ESCOM</p>
+    </footer>
+
+    <script>
+        // Actualizar parámetros según el método
+        document.getElementById('metodo').addEventListener('change', function() {
+            const metodo = this.value;
+
+            // Ocultar todos
+            document.getElementById('params_intervalo').style.display = 'none';
+            document.getElementById('params_puntos').style.display = 'none';
+            document.getElementById('params_derivada').style.display = 'none';
+            document.getElementById('params_iteracion').style.display = 'none';
+            document.getElementById('x1_container').style.display = 'none';
+            document.getElementById('x2_container').style.display = 'none';
+
+            // Mostrar según método
+            if (metodo === 'biseccion' || metodo === 'falsa_posicion') {
+                document.getElementById('params_intervalo').style.display = 'block';
+            } else if (metodo === 'secante') {
+                document.getElementById('params_puntos').style.display = 'block';
+                document.getElementById('x1_container').style.display = 'block';
+            } else if (metodo === 'newton_raphson') {
+                document.getElementById('params_puntos').style.display = 'block';
+                document.getElementById('params_derivada').style.display = 'block';
+            } else if (metodo === 'punto_fijo') {
+                document.getElementById('params_puntos').style.display = 'block';
+                document.getElementById('params_iteracion').style.display = 'block';
+            } else if (metodo === 'muller') {
+                document.getElementById('params_puntos').style.display = 'block';
+                document.getElementById('x1_container').style.display = 'block';
+                document.getElementById('x2_container').style.display = 'block';
+            }
+        });
+
+        function mostrarError(msg) {
+            const errorBox = document.getElementById('errorMsg');
+            errorBox.textContent = msg;
+            errorBox.classList.add('show');
+        }
+
+        function ocultarError() {
+            document.getElementById('errorMsg').classList.remove('show');
+        }
+
+        function mostrarExito(msg) {
+            const successBox = document.getElementById('successMsg');
+            successBox.textContent = msg;
+            successBox.classList.add('show');
+            setTimeout(() => {
+                successBox.classList.remove('show');
+            }, 3000);
+        }
+
+        async function calcular() {
+            ocultarError();
+
+            const metodo = document.getElementById('metodo').value;
+            const funcion = document.getElementById('funcion').value;
+            const tolerancia = parseFloat(document.getElementById('tolerancia').value);
+            const max_iteraciones = parseInt(document.getElementById('max_iteraciones').value);
+
+            if (!metodo) {
+                mostrarError('Por favor selecciona un método');
+                return;
+            }
+
+            if (!funcion) {
+                mostrarError('Por favor ingresa la función');
+                return;
+            }
+
+            const data = {
+                metodo: metodo,
+                funcion: funcion,
+                tolerancia: tolerancia,
+                max_iteraciones: max_iteraciones
+            };
+
+            // Agregar parámetros según el método
+            if (metodo === 'biseccion' || metodo === 'falsa_posicion') {
+                const a = parseFloat(document.getElementById('a').value);
+                const b = parseFloat(document.getElementById('b').value);
+                if (isNaN(a) || isNaN(b)) {
+                    mostrarError('Ingresa valores válidos para a y b');
+                    return;
+                }
+                data.a = a;
+                data.b = b;
+            } else if (metodo === 'secante') {
+                const x0 = parseFloat(document.getElementById('x0').value);
+                const x1 = parseFloat(document.getElementById('x1').value);
+                if (isNaN(x0) || isNaN(x1)) {
+                    mostrarError('Ingresa valores válidos para x₀ y x₁');
+                    return;
+                }
+                data.x0 = x0;
+                data.x1 = x1;
+            } else if (metodo === 'newton_raphson') {
+                const x0 = parseFloat(document.getElementById('x0').value);
+                const derivada = document.getElementById('derivada').value;
+                if (isNaN(x0)) {
+                    mostrarError('Ingresa un valor válido para x₀');
+                    return;
+                }
+                if (!derivada) {
+                    mostrarError('Ingresa la derivada f\'(x)');
+                    return;
+                }
+                data.x0 = x0;
+                data.derivada = derivada;
+            } else if (metodo === 'punto_fijo') {
+                const x0 = parseFloat(document.getElementById('x0').value);
+                const g = document.getElementById('g').value;
+                if (isNaN(x0)) {
+                    mostrarError('Ingresa un valor válido para x₀');
+                    return;
+                }
+                if (!g) {
+                    mostrarError('Ingresa la función g(x)');
+                    return;
+                }
+                data.x0 = x0;
+                data.g = g;
+            } else if (metodo === 'muller') {
+                const x0 = parseFloat(document.getElementById('x0').value);
+                const x1 = parseFloat(document.getElementById('x1').value);
+                const x2 = parseFloat(document.getElementById('x2').value);
+                if (isNaN(x0) || isNaN(x1) || isNaN(x2)) {
+                    mostrarError('Ingresa valores válidos para x₀, x₁ y x₂');
+                    return;
+                }
+                data.x0 = x0;
+                data.x1 = x1;
+                data.x2 = x2;
+            }
+
+            try {
+                const response = await fetch('/api/ecuaciones-una-variable', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const resultado = await response.json();
+
+                if (response.ok) {
+                    mostrarResultados(resultado);
+                    mostrarExito('Cálculo completado exitosamente');
+                } else {
+                    mostrarError(resultado.error);
+                }
+            } catch (error) {
+                mostrarError('Error en la conexión: ' + error.message);
+            }
+        }
+
+        function mostrarResultados(datos) {
+            document.getElementById('raiz').textContent = datos.raiz.toFixed(8);
+            document.getElementById('fx').textContent = datos.fx.toExponential(4);
+            document.getElementById('iteraciones').textContent = datos.iteraciones;
+            document.getElementById('error_estimado').textContent = datos.error_estimado.toExponential(4);
+
+            // Llenar tabla
+            const tbody = document.getElementById('tabla_cuerpo');
+            tbody.innerHTML = '';
+
+            datos.historial.forEach((item, index) => {
+                const fila = `<tr>
+                    <td>${index + 1}</td>
+                    <td>${item.x.toFixed(8)}</td>
+                    <td>${item.fx.toExponential(4)}</td>
+                    <td>${item.error.toExponential(4)}</td>
+                </tr>`;
+                tbody.innerHTML += fila;
+            });
+
+            // Mostrar sección de resultados
+            document.getElementById('resultados').classList.add('show');
+        }
+
+        function limpiar() {
+            document.getElementById('funcion').value = '';
+            document.getElementById('a').value = '';
+            document.getElementById('b').value = '';
+            document.getElementById('x0').value = '';
+            document.getElementById('x1').value = '';
+            document.getElementById('x2').value = '';
+            document.getElementById('derivada').value = '';
+            document.getElementById('g').value = '';
+            document.getElementById('metodo').value = '';
+            document.getElementById('resultados').classList.remove('show');
+            ocultarError();
+        }
+    </script>
+</body>
+</html>
+                    <!-- Selección de método -->
+                    <div class="form-group">
+                        <label for="metodo">📊 Selecciona un método:</label>
+                        <select id="metodo" name="metodo" required>
+                            <option value="">-- Selecciona un método --</option>
+                            <option value="biseccion">Bisección</option>
+                            <option value="falsa_posicion">Falsa Posición</option>
+                            <option value="secante">Secante</option>
+                            <option value="newton_raphson">Newton-Raphson</option>
+                            <option value="punto_fijo">Punto Fijo</option>
+                            <option value="muller">Müller</option>
+                        </select>
+                    </div>
+
+                    <!-- Función -->
+                    <div class="form-group">
+                        <label for="funcion">𝑓(x) Función:</label>
+                        <input type="text" id="funcion" name="funcion" required placeholder="ej: x**2 - 4">
+                        <small style="color: #999; margin-top: 3px;">Usa x como variable, ** para potencia, sqrt() para raíz</small>
+                    </div>
+
+                    <!-- Parámetros: Intervalo [a, b] -->
+                    <div id="params_intervalo" class="params-section">
+                        <h4>Intervalo</h4>
+                        <div class="params-row">
+                            <div class="form-group">
+                                <label for="a">a (límite inferior):</label>
+                                <input type="number" id="a" name="a" step="0.0001" placeholder="ej: -5">
+                            </div>
+                            <div class="form-group">
+                                <label for="b">b (límite superior):</label>
+                                <input type="number" id="b" name="b" step="0.0001" placeholder="ej: 5">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Parámetros: Puntos iniciales -->
+                    <div id="params_puntos_iniciales" class="params-section">
+                        <h4>Puntos Iniciales</h4>
+                        <div class="form-group">
+                            <label for="x0">x₀ (punto inicial):</label>
+                            <input type="number" id="x0" name="x0" step="0.0001" placeholder="ej: 1">
+                        </div>
+
+                        <div id="params_x1" style="display: none;">
+                            <div class="form-group">
+                                <label for="x1">x₁ (segundo punto):</label>
+                                <input type="number" id="x1" name="x1" step="0.0001" placeholder="ej: 2">
+                            </div>
+                        </div>
+
+                        <div id="params_x2" style="display: none;">
+                            <div class="form-group">
+                                <label for="x2">x₂ (tercer punto):</label>
+                                <input type="number" id="x2" name="x2" step="0.0001" placeholder="ej: 3">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Derivada para Newton-Raphson -->
+                    <div id="params_derivada" class="params-section">
+                        <h4>Derivada</h4>
+                        <div class="form-group">
+                            <label for="derivada">f'(x) (derivada):</label>
+                            <input type="text" id="derivada" name="derivada" placeholder="ej: 2*x">
+                            <small style="color: #999; margin-top: 3px;">Derivada de f(x)</small>
+                        </div>
+                    </div>
+
+                    <!-- Función de iteración para Punto Fijo -->
+                    <div id="params_iteracion" class="params-section">
+                        <h4>Función de Iteración</h4>
+                        <div class="form-group">
+                            <label for="g">g(x) = (función de iteración):</label>
+                            <input type="text" id="g" name="g" placeholder="ej: (x + 2)/3">
+                            <small style="color: #999; margin-top: 3px;">Para resolver x = g(x)</small>
+                        </div>
+                    </div>
+
+                    <!-- Parámetros comunes -->
+                    <div class="params-section show">
+                        <h4>Configuración</h4>
+                        <div class="params-row">
+                            <div class="form-group">
+                                <label for="tolerancia">Tolerancia:</label>
+                                <input type="number" id="tolerancia" name="tolerancia" step="0.00001" value="0.00001" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="max_iteraciones">Máx. iteraciones:</label>
+                                <input type="number" id="max_iteraciones" name="max_iteraciones" value="100" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn-primary">Calcular</button>
+                    </div>
+                </form>
+
+                <div class="info-box">
+                    <strong>💡 Ayuda:</strong> Selecciona un método y proporciona los parámetros requeridos. Los métodos buscan raíces de la ecuación f(x) = 0.
+                </div>
+            </div>
+
+            <!-- PANEL DE RESULTADOS -->
+            <div id="resultsPanel" class="results-panel">
+                <h2>Resultados</h2>
+
+                <div class="result-summary">
+                    <div class="result-item">
+                        <label>Raíz encontrada</label>
+                        <div class="value" id="raiz">-</div>
+                    </div>
+                    <div class="result-item">
+                        <label>f(x) en la raíz</label>
+                        <div class="value" id="fx">-</div>
+                    </div>
+                    <div class="result-item">
+                        <label>Iteraciones</label>
+                        <div class="value" id="iteraciones">-</div>
+                    </div>
+                    <div class="result-item">
+                        <label>Error estimado</label>
+                        <div class="value" id="error_estimado">-</div>
+                    </div>
+                </div>
+
+                <div class="table-section">
+                    <h3>Historial de Iteraciones</h3>
+                    <div class="table-wrapper">
+                        <table id="resultTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>x</th>
+                                    <th>f(x)</th>
+                                    <th>Error</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="grafico"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 App de Métodos Numéricos - ESCOM</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let chart = null;
+
+        // Actualizar parámetros según el método seleccionado
+        document.getElementById('metodo').addEventListener('change', function() {
+            const metodo = this.value;
+
+            // Ocultar todos los parámetros
+            document.getElementById('params_intervalo').classList.remove('show');
+            document.getElementById('params_puntos_iniciales').classList.remove('show');
+            document.getElementById('params_derivada').classList.remove('show');
+            document.getElementById('params_iteracion').classList.remove('show');
+            document.getElementById('params_x1').style.display = 'none';
+            document.getElementById('params_x2').style.display = 'none';
+
+            // Mostrar los parámetros específicos del método
+            if (metodo === 'biseccion' || metodo === 'falsa_posicion') {
+                document.getElementById('params_intervalo').classList.add('show');
+            } else if (metodo === 'secante') {
+                document.getElementById('params_puntos_iniciales').classList.add('show');
+                document.getElementById('params_x1').style.display = 'block';
+            } else if (metodo === 'newton_raphson') {
+                document.getElementById('params_puntos_iniciales').classList.add('show');
+                document.getElementById('params_derivada').classList.add('show');
+            } else if (metodo === 'punto_fijo') {
+                document.getElementById('params_puntos_iniciales').classList.add('show');
+                document.getElementById('params_iteracion').classList.add('show');
+            } else if (metodo === 'muller') {
+                document.getElementById('params_puntos_iniciales').classList.add('show');
+                document.getElementById('params_x1').style.display = 'block';
+                document.getElementById('params_x2').style.display = 'block';
+            }
+        });
+
+        // Manejar el envío del formulario
+        document.getElementById('ecuacionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const errorBox = document.getElementById('errorBox');
+            const successBox = document.getElementById('successBox');
+            errorBox.classList.remove('show');
+            successBox.classList.remove('show');
+
+            const formData = new FormData(this);
+            const data = {
+                metodo: formData.get('metodo'),
+                funcion: formData.get('funcion'),
+                tolerancia: parseFloat(formData.get('tolerancia')),
+                max_iteraciones: parseInt(formData.get('max_iteraciones'))
+            };
+
+            // Validar que se seleccione un método
+            if (!data.metodo) {
+                mostrarError('Por favor selecciona un método');
+                return;
+            }
+
+            // Agregar parámetros según el método
+            if (data.metodo === 'biseccion' || data.metodo === 'falsa_posicion') {
+                data.a = parseFloat(formData.get('a'));
+                data.b = parseFloat(formData.get('b'));
+
+                if (isNaN(data.a) || isNaN(data.b)) {
+                    mostrarError('Los límites a y b deben ser números válidos');
+                    return;
+                }
+            } else if (data.metodo === 'secante') {
+                data.x0 = parseFloat(formData.get('x0'));
+                data.x1 = parseFloat(formData.get('x1'));
+
+                if (isNaN(data.x0) || isNaN(data.x1)) {
+                    mostrarError('Los puntos x0 y x1 deben ser números válidos');
+                    return;
+                }
+            } else if (data.metodo === 'newton_raphson') {
+                data.x0 = parseFloat(formData.get('x0'));
+                data.derivada = formData.get('derivada');
+
+                if (isNaN(data.x0)) {
+                    mostrarError('El punto x0 debe ser un número válido');
+                    return;
+                }
+                if (!data.derivada) {
+                    mostrarError('La derivada f\'(x) es requerida para Newton-Raphson');
+                    return;
+                }
+            } else if (data.metodo === 'punto_fijo') {
+                data.x0 = parseFloat(formData.get('x0'));
+                data.g = formData.get('g');
+
+                if (isNaN(data.x0)) {
+                    mostrarError('El punto x0 debe ser un número válido');
+                    return;
+                }
+                if (!data.g) {
+                    mostrarError('La función g(x) es requerida para Punto Fijo');
+                    return;
+                }
+            } else if (data.metodo === 'muller') {
+                data.x0 = parseFloat(formData.get('x0'));
+                data.x1 = parseFloat(formData.get('x1'));
+                data.x2 = parseFloat(formData.get('x2'));
+
+                if (isNaN(data.x0) || isNaN(data.x1) || isNaN(data.x2)) {
+                    mostrarError('Los puntos x0, x1 y x2 deben ser números válidos');
+                    return;
+                }
+            }
+
+            try {
+                const response = await fetch('/api/ecuaciones-una-variable', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const resultado = await response.json();
+
+                if (response.ok) {
+                    mostrarResultados(resultado);
+                    successBox.textContent = '✓ Cálculo completado exitosamente';
+                    successBox.classList.add('show');
+                } else {
+                    mostrarError(resultado.error);
+                }
+            } catch (error) {
+                mostrarError('Error en la conexión: ' + error.message);
+            }
+        });
+
+        function mostrarResultados(datos) {
+            // Actualizar resumen
+            document.getElementById('raiz').textContent = datos.raiz.toFixed(6);
+            document.getElementById('fx').textContent = datos.fx.toExponential(4);
+            document.getElementById('iteraciones').textContent = datos.iteraciones;
+            document.getElementById('error_estimado').textContent = datos.error_estimado.toExponential(4);
+
+            // Llenar tabla de iteraciones
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            datos.historial.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.x.toFixed(8)}</td>
+                    <td>${item.fx.toExponential(4)}</td>
+                    <td>${item.error.toExponential(4)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Crear gráfico
+            crearGrafico(datos);
+
+            // Mostrar resultados
+            document.getElementById('resultsPanel').classList.add('show');
+        }
+
+        function crearGrafico(datos) {
+            const ctx = document.getElementById('grafico').getContext('2d');
+
+            const x_values = datos.historial.map(item => item.x);
+            const fx_values = datos.historial.map(item => item.fx);
+            const error_values = datos.historial.map(item => item.error);
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: datos.historial.map((_, i) => `It. ${i + 1}`),
+                    datasets: [
+                        {
+                            label: 'f(x)',
+                            data: fx_values,
+                            borderColor: '#FF6384',
+                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Error',
+                            data: error_values,
+                            borderColor: '#36A2EB',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Convergencia del Método',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'f(x)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Error'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function mostrarError(mensaje) {
+            document.getElementById('errorBox').textContent = '✗ ' + mensaje;
+            document.getElementById('errorBox').classList.add('show');
+        }
+    </script>
+</body>
+</html>
+                <div class="form-group">
+                    <label for="metodo">Selecciona un método:</label>
+                    <select id="metodo" name="metodo" required>
+                        <option value="">-- Selecciona un método --</option>
+                        <option value="biseccion">Bisección</option>
+                        <option value="falsa_posicion">Falsa Posición</option>
+                        <option value="secante">Secante</option>
+                        <option value="newton_raphson">Newton-Raphson</option>
+                        <option value="punto_fijo">Punto Fijo</option>
+                        <option value="muller">Müller</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="funcion">Función f(x) (ej: x**2 - 4):</label>
+                    <input type="text" id="funcion" name="funcion" required placeholder="Escribe la función">
+                </div>
+
+                <!-- Parámetros para Bisección y Falsa Posición -->
+                <div id="params_intervalo" style="display: none;">
+                    <div class="form-group">
+                        <label for="a">Límite inferior (a):</label>
+                        <input type="number" id="a" name="a" step="0.0001" placeholder="Valor de a">
+                    </div>
+                    <div class="form-group">
+                        <label for="b">Límite superior (b):</label>
+                        <input type="number" id="b" name="b" step="0.0001" placeholder="Valor de b">
+                    </div>
+                </div>
+
+                <!-- Parámetros para Secante, Newton-Raphson y Müller -->
+                <div id="params_puntos_iniciales" style="display: none;">
+                    <div class="form-group">
+                        <label for="x0">Punto inicial x0:</label>
+                        <input type="number" id="x0" name="x0" step="0.0001" placeholder="Valor inicial">
+                    </div>
+                    <div id="params_x1" style="display: none;">
+                        <div class="form-group">
+                            <label for="x1">Punto x1:</label>
+                            <input type="number" id="x1" name="x1" step="0.0001" placeholder="Segundo punto">
+                        </div>
+                    </div>
+                    <div id="params_x2" style="display: none;">
+                        <div class="form-group">
+                            <label for="x2">Punto x2:</label>
+                            <input type="number" id="x2" name="x2" step="0.0001" placeholder="Tercer punto">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Parámetros para Newton-Raphson y Punto Fijo -->
+                <div id="params_derivada" style="display: none;">
+                    <div class="form-group">
+                        <label for="derivada">Derivada f'(x) (para Newton-Raphson):</label>
+                        <input type="text" id="derivada" name="derivada" placeholder="Escribe la derivada">
+                    </div>
+                </div>
+
+                <!-- Parámetros para Punto Fijo -->
+                <div id="params_iteracion" style="display: none;">
+                    <div class="form-group">
+                        <label for="g">Función de iteración g(x):</label>
+                        <input type="text" id="g" name="g" placeholder="ej: x/2 + 1">
+                    </div>
+                </div>
+
+                <!-- Parámetros comunes -->
+                <div class="form-group">
+                    <label for="tolerancia">Tolerancia:</label>
+                    <input type="number" id="tolerancia" name="tolerancia" step="0.00001" value="0.00001" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="max_iteraciones">Máximo de iteraciones:</label>
+                    <input type="number" id="max_iteraciones" name="max_iteraciones" value="100" required>
+                </div>
+
+                <button type="submit" class="btn-primary">Calcular</button>
+            </form>
+
+            <div id="error" class="error"></div>
+        </section>
+
+        <section id="resultsSection" class="results">
+            <h2>Resultados</h2>
+            
+            <div class="result-summary">
+                <p><strong>Raíz encontrada:</strong> <span id="raiz">-</span></p>
+                <p><strong>Valor de f(x):</strong> <span id="fx">-</span></p>
+                <p><strong>Iteraciones realizadas:</strong> <span id="iteraciones">-</span></p>
+                <p><strong>Error estimado:</strong> <span id="error_estimado">-</span></p>
+            </div>
+
+            <h3>Tabla de Iteraciones</h3>
+            <div style="overflow-x: auto;">
+                <table id="resultTable">
+                    <thead>
+                        <tr>
+                            <th>Iteración</th>
+                            <th>x</th>
+                            <th>f(x)</th>
+                            <th>Error</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="grafico"></canvas>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 App de Métodos Numéricos - ESCOM</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let chart = null;
+
+        // Actualizar parámetros según el método seleccionado
+        document.getElementById('metodo').addEventListener('change', function() {
+            const metodo = this.value;
+            
+            // Ocultar todos los parámetros
+            document.getElementById('params_intervalo').style.display = 'none';
+            document.getElementById('params_puntos_iniciales').style.display = 'none';
+            document.getElementById('params_derivada').style.display = 'none';
+            document.getElementById('params_iteracion').style.display = 'none';
+            document.getElementById('params_x1').style.display = 'none';
+            document.getElementById('params_x2').style.display = 'none';
+
+            // Mostrar los parámetros específicos del método
+            if (metodo === 'biseccion' || metodo === 'falsa_posicion') {
+                document.getElementById('params_intervalo').style.display = 'block';
+            } else if (metodo === 'secante') {
+                document.getElementById('params_puntos_iniciales').style.display = 'block';
+                document.getElementById('params_x1').style.display = 'block';
+            } else if (metodo === 'newton_raphson') {
+                document.getElementById('params_puntos_iniciales').style.display = 'block';
+                document.getElementById('params_derivada').style.display = 'block';
+            } else if (metodo === 'punto_fijo') {
+                document.getElementById('params_puntos_iniciales').style.display = 'block';
+                document.getElementById('params_iteracion').style.display = 'block';
+            } else if (metodo === 'muller') {
+                document.getElementById('params_puntos_iniciales').style.display = 'block';
+                document.getElementById('params_x1').style.display = 'block';
+                document.getElementById('params_x2').style.display = 'block';
+            }
+        });
+
+        // Manejar el envío del formulario
+        document.getElementById('ecuacionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const data = {
+                metodo: formData.get('metodo'),
+                funcion: formData.get('funcion'),
+                tolerancia: parseFloat(formData.get('tolerancia')),
+                max_iteraciones: parseInt(formData.get('max_iteraciones'))
+            };
+
+            // Agregar parámetros según el método
+            if (data.metodo === 'biseccion' || data.metodo === 'falsa_posicion') {
+                data.a = parseFloat(formData.get('a'));
+                data.b = parseFloat(formData.get('b'));
+            } else if (data.metodo === 'secante') {
+                data.x0 = parseFloat(formData.get('x0'));
+                data.x1 = parseFloat(formData.get('x1'));
+            } else if (data.metodo === 'newton_raphson') {
+                data.x0 = parseFloat(formData.get('x0'));
+                data.derivada = formData.get('derivada');
+            } else if (data.metodo === 'punto_fijo') {
+                data.x0 = parseFloat(formData.get('x0'));
+                data.g = formData.get('g');
+            } else if (data.metodo === 'muller') {
+                data.x0 = parseFloat(formData.get('x0'));
+                data.x1 = parseFloat(formData.get('x1'));
+                data.x2 = parseFloat(formData.get('x2'));
+            }
+
+            try {
+                const response = await fetch('/api/ecuaciones-una-variable', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const resultado = await response.json();
+
+                if (response.ok) {
+                    mostrarResultados(resultado);
+                    document.getElementById('error').classList.remove('show');
+                } else {
+                    mostrarError(resultado.error);
+                }
+            } catch (error) {
+                mostrarError('Error en la conexión: ' + error.message);
+            }
+        });
+
+        function mostrarResultados(datos) {
+            // Actualizar resumen
+            document.getElementById('raiz').textContent = datos.raiz.toFixed(6);
+            document.getElementById('fx').textContent = datos.fx.toFixed(8);
+            document.getElementById('iteraciones').textContent = datos.iteraciones;
+            document.getElementById('error_estimado').textContent = datos.error_estimado.toFixed(8);
+
+            // Llenar tabla de iteraciones
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            datos.historial.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.x.toFixed(6)}</td>
+                    <td>${item.fx.toFixed(8)}</td>
+                    <td>${item.error.toFixed(8)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Crear gráfico
+            crearGrafico(datos);
+
+            // Mostrar resultados
+            document.getElementById('resultsSection').classList.add('show');
+        }
+
+        function crearGrafico(datos) {
+            const ctx = document.getElementById('grafico').getContext('2d');
+            
+            const x_values = datos.historial.map(item => item.x);
+            const fx_values = datos.historial.map(item => item.fx);
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: x_values.map((x, i) => `Iter ${i+1}`),
+                    datasets: [
+                        {
+                            label: 'f(x)',
+                            data: fx_values,
+                            borderColor: 'rgb(75, 192, 192)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Convergencia: Valor de f(x) en cada iteración'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'f(x)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function mostrarError(mensaje) {
+            document.getElementById('error').textContent = mensaje;
+            document.getElementById('error').classList.add('show');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Botón Agregar Función</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .test { margin: 20px 0; padding: 10px; border: 1px solid #ccc; }
+        .pass { color: green; font-weight: bold; }
+        .fail { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Test del Botón "+" para Agregar Funciones</h1>
+    
+    <!-- Simular la estructura del HTML -->
+    <div id="functionsContainer">
+        <div class="function-input-group" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;">
+            <div style="flex: 1;">
+                <label for="f_expr_1">dy₁/dx = f₁(x, y₁, y₂, ...)</label>
+                <input type="text" id="f_expr_1" class="f_expr_input" value="y2" required>
+            </div>
+            <button type="button" onclick="agregarFuncion()">+</button>
+        </div>
+        <div id="additionalFunctions"></div>
+    </div>
+
+    <div id="y0Container">
+        <div class="y0-input-group">
+            <label>y₁(x₀):</label>
+            <input type="number" id="y0_1" class="y0_input" value="1">
+        </div>
+        <div id="additionalY0s"></div>
+    </div>
+
+    <hr>
+    <button onclick="runTests()">Ejecutar Tests</button>
+    <div id="results"></div>
+
+    <script>
+        // Variables globales
+        let functionCount = 1;
+        let y0Count = 1;
+
+        function agregarFuncion() {
+            functionCount++;
+            const container = document.getElementById('additionalFunctions');
+            const newDiv = document.createElement('div');
+            newDiv.className = 'function-input-group';
+            newDiv.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;';
+            newDiv.id = 'func-group-' + functionCount;
+            
+            newDiv.innerHTML = `
+                <div style="flex: 1;">
+                    <label for="f_expr_${functionCount}">dy${functionCount}/dx = f${functionCount}(...)</label>
+                    <input type="text" id="f_expr_${functionCount}" class="f_expr_input" placeholder="ej: -y1">
+                </div>
+                <button type="button" onclick="eliminarFuncion(${functionCount})">-</button>
+            `;
+            
+            container.appendChild(newDiv);
+            agregarY0();
+        }
+
+        function eliminarFuncion(index) {
+            const group = document.getElementById('func-group-' + index);
+            if (group) {
+                group.remove();
+                functionCount--;
+            }
+            
+            const y0Group = document.getElementById('y0-group-' + index);
+            if (y0Group) {
+                y0Group.remove();
+                y0Count--;
+            }
+        }
+
+        function agregarY0() {
+            y0Count++;
+            const container = document.getElementById('additionalY0s');
+            const newDiv = document.createElement('div');
+            newDiv.className = 'y0-input-group';
+            newDiv.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px;';
+            newDiv.id = 'y0-group-' + y0Count;
+            
+            newDiv.innerHTML = `
+                <label>y${y0Count}(x₀):</label>
+                <input type="number" id="y0_${y0Count}" class="y0_input" value="0">
+                <button type="button" onclick="eliminarY0(${y0Count})">-</button>
+            `;
+            
+            container.appendChild(newDiv);
+        }
+
+        function eliminarY0(index) {
+            const group = document.getElementById('y0-group-' + index);
+            if (group) {
+                group.remove();
+                y0Count--;
+            }
+        }
+
+        function runTests() {
+            const results = document.getElementById('results');
+            results.innerHTML = '';
+            let passed = 0;
+            let failed = 0;
+
+            // Test 1: Iniciales
+            let test1 = document.querySelector('input[id="f_expr_1"]') !== null;
+            if (test1) {
+                results.innerHTML += '<div class="test"><span class="pass">✓ TEST 1 PASSED:</span> Campo f_expr_1 existe</div>';
+                passed++;
+            } else {
+                results.innerHTML += '<div class="test"><span class="fail">✗ TEST 1 FAILED:</span> Campo f_expr_1 no existe</div>';
+                failed++;
+            }
+
+            // Test 2: Contar funciones iniciales
+            let initialCount = document.querySelectorAll('.f_expr_input').length;
+            if (initialCount === 1) {
+                results.innerHTML += `<div class="test"><span class="pass">✓ TEST 2 PASSED:</span> 1 función inicial</div>`;
+                passed++;
+            } else {
+                results.innerHTML += `<div class="test"><span class="fail">✗ TEST 2 FAILED:</span> Esperaba 1, encontré ${initialCount}</div>`;
+                failed++;
+            }
+
+            // Test 3: Agregar función
+            document.querySelector('button[onclick="agregarFuncion()"]').click();
+            let afterAdd = document.querySelectorAll('.f_expr_input').length;
+            if (afterAdd === 2) {
+                results.innerHTML += `<div class="test"><span class="pass">✓ TEST 3 PASSED:</span> Después de click: 2 funciones</div>`;
+                passed++;
+            } else {
+                results.innerHTML += `<div class="test"><span class="fail">✗ TEST 3 FAILED:</span> Esperaba 2, encontré ${afterAdd}</div>`;
+                failed++;
+            }
+
+            // Test 4: Agregar otra función
+            document.querySelector('button[onclick="agregarFuncion()"]').click();
+            let afterAdd2 = document.querySelectorAll('.f_expr_input').length;
+            if (afterAdd2 === 3) {
+                results.innerHTML += `<div class="test"><span class="pass">✓ TEST 4 PASSED:</span> Después de otro click: 3 funciones</div>`;
+                passed++;
+            } else {
+                results.innerHTML += `<div class="test"><span class="fail">✗ TEST 4 FAILED:</span> Esperaba 3, encontré ${afterAdd2}</div>`;
+                failed++;
+            }
+
+            // Test 5: Verificar y0
+            let y0Count_actual = document.querySelectorAll('.y0_input').length;
+            if (y0Count_actual === 3) {
+                results.innerHTML += `<div class="test"><span class="pass">✓ TEST 5 PASSED:</span> y0 también tiene 3 campos</div>`;
+                passed++;
+            } else {
+                results.innerHTML += `<div class="test"><span class="fail">✗ TEST 5 FAILED:</span> Esperaba 3 y0, encontré ${y0Count_actual}</div>`;
+                failed++;
+            }
+
+            // Summary
+            results.innerHTML += `<hr><h3>RESUMEN: ${passed} PASSED, ${failed} FAILED</h3>`;
+            if (failed === 0) {
+                results.innerHTML += '<h2 class="pass">✓ TODO FUNCIONA CORRECTAMENTE</h2>';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -363,14 +363,24 @@
             <h2>Ingresa los Datos</h2>
             <form id="formulario">
                 <div class="form-group">
-                    <label for="f_expr">Función f(x, y)</label>
-                    <input 
-                        type="text" 
-                        id="f_expr" 
-                        placeholder="ej: x + y"
-                        required
-                    >
-                    <small>Usa 'x' e 'y' para representar variables. Ej: x**2 + y, sin(x)*y</small>
+                    <label>Funciones del Sistema</label>
+                    <div id="functionsContainer" style="margin-bottom: 15px;">
+                        <div class="function-input-group" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;">
+                            <div style="flex: 1;">
+                                <label for="f_expr_1" style="font-size: 0.9em;">dy₁/dx = f₁(x, y₁, y₂, ...)</label>
+                                <input 
+                                    type="text" 
+                                    id="f_expr_1" 
+                                    class="f_expr_input"
+                                    placeholder="ej: x + y1"
+                                    required
+                                >
+                            </div>
+                            <button type="button" class="btn-add-function" onclick="agregarFuncion()" style="padding: 8px 12px; background-color: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer;">+</button>
+                        </div>
+                        <div id="additionalFunctions"></div>
+                    </div>
+                    <small>Usa 'x' para la variable independiente. Usa 'y1', 'y2', 'y3'... para las variables dependientes. Ej: y2 (primera función), -y1 (segunda función)</small>
                 </div>
 
                 <div class="form-group hidden-fields" id="df_group">
@@ -404,7 +414,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="x0">Condición Inicial x0</label>
+                    <label for="x0">Condición Inicial x₀</label>
                     <input 
                         type="number" 
                         id="x0" 
@@ -415,14 +425,21 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="y0">Condición Inicial y0</label>
-                    <input 
-                        type="number" 
-                        id="y0" 
-                        placeholder="ej: 1"
-                        step="0.01"
-                        required
-                    >
+                    <label>Condiciones Iniciales y₀</label>
+                    <div id="y0Container">
+                        <div class="y0-input-group" style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <label for="y0_1" style="flex: 0 0 50px; padding-top: 8px;">y₁(x₀):</label>
+                            <input 
+                                type="number" 
+                                id="y0_1" 
+                                class="y0_input"
+                                placeholder="ej: 1"
+                                step="0.01"
+                                required
+                            >
+                        </div>
+                        <div id="additionalY0s"></div>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -476,6 +493,10 @@
     </div>
 
     <script>
+        // Inicializar variables globales
+        let functionCount = 1;
+        let y0Count = 1;
+
         const formulas = {
             'euler': {
                 titulo: "Método de Euler",
@@ -556,17 +577,87 @@
             ddfGroup.classList.remove('show');
             dddfGroup.classList.remove('show');
 
+            // Determinar orden de derivadas a calcular
+            let orden = 0;
             if (metodo === 'taylor_2') {
+                orden = 1;
                 dfGroup.classList.add('show');
             } else if (metodo === 'taylor_3') {
+                orden = 2;
                 dfGroup.classList.add('show');
                 ddfGroup.classList.add('show');
             } else if (metodo === 'taylor_4') {
+                orden = 3;
                 dfGroup.classList.add('show');
                 ddfGroup.classList.add('show');
                 dddfGroup.classList.add('show');
+            } else if (['rk3', 'rk4', 'rkf'].includes(metodo)) {
+                // Runge-Kutta también puede usar derivadas si el usuario lo desea
+                orden = 1; // Mostrar solo la primera derivada
+                dfGroup.classList.add('show');
+            }
+
+            // Si se requieren derivadas, calcularlas automáticamente
+            if (orden > 0) {
+                calcularDerivadas();
             }
         }
+
+        async function calcularDerivadas() {
+            try {
+                const fExprElements = document.querySelectorAll('.f_expr_input');
+                
+                // Procesar solo la primera función (para Taylor usualmente es una)
+                if (fExprElements.length === 0) return;
+                
+                const fExpr = fExprElements[0].value.trim();
+                if (!fExpr) return;
+
+                const response = await fetch('/api/calcular-derivadas', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        f_expr: fExpr,
+                        orden: 3  // Calcular hasta 3 derivadas
+                    })
+                });
+
+                if (!response.ok) {
+                    console.error('Error al calcular derivadas:', response.statusText);
+                    return;
+                }
+
+                const datos = await response.json();
+
+                // Rellenar los campos de derivadas
+                document.getElementById('df_expr').value = datos.df_expr || '';
+                document.getElementById('ddf_expr').value = datos.ddf_expr || '';
+                document.getElementById('dddf_expr').value = datos.dddf_expr || '';
+
+                // Marcar como readonly
+                document.getElementById('df_expr').readOnly = true;
+                document.getElementById('ddf_expr').readOnly = true;
+                document.getElementById('dddf_expr').readOnly = true;
+
+            } catch (error) {
+                console.error('Error calculando derivadas:', error);
+            }
+        }
+
+        // Calcular derivadas cuando cambia la función
+        document.addEventListener('DOMContentLoaded', function() {
+            const funcionesContainer = document.getElementById('funciones-container');
+            if (funcionesContainer) {
+                // Al cambiar cualquier input de función, recalcular derivadas
+                funcionesContainer.addEventListener('change', function(e) {
+                    if (e.target.classList.contains('f_expr_input')) {
+                        calcularDerivadas();
+                    }
+                });
+            }
+        });
 
         const formulario = document.getElementById('formulario');
         const errorDiv = document.getElementById('error');
@@ -577,20 +668,40 @@
             
             const metodo = document.querySelector('input[name="metodo"]:checked').value;
             const x0 = parseFloat(document.getElementById('x0').value);
-            const y0 = parseFloat(document.getElementById('y0').value);
             const xf = parseFloat(document.getElementById('xf').value);
             const n = parseInt(document.getElementById('n').value);
-            const f_expr = document.getElementById('f_expr').value.trim();
+            
+            // Recopilar todas las funciones
+            const functionsElements = document.querySelectorAll('.f_expr_input');
+            const functions = [];
+            functionsElements.forEach(elem => {
+                const val = elem.value.trim();
+                if (val) functions.push(val);
+            });
+            
+            // Recopilar todas las condiciones iniciales y0
+            const y0Elements = document.querySelectorAll('.y0_input');
+            const y0 = [];
+            y0Elements.forEach(elem => {
+                const val = parseFloat(elem.value);
+                if (!isNaN(val)) y0.push(val);
+            });
 
             errorDiv.classList.remove('show');
             errorDiv.textContent = '';
 
             try {
-                if (isNaN(x0) || isNaN(y0) || isNaN(xf) || isNaN(n)) {
+                if (isNaN(x0) || isNaN(xf) || isNaN(n)) {
                     throw new Error('Todos los valores deben ser números válidos');
                 }
-                if (!f_expr) {
-                    throw new Error('La función es obligatoria');
+                if (functions.length === 0) {
+                    throw new Error('Se requiere al menos una función');
+                }
+                if (y0.length === 0) {
+                    throw new Error('Se requiere al menos una condición inicial y0');
+                }
+                if (y0.length !== functions.length) {
+                    throw new Error(`Número de funciones (${functions.length}) debe coincidir con el de condiciones iniciales (${y0.length})`);
                 }
 
                 const requestBody = {
@@ -599,7 +710,7 @@
                     y0: y0,
                     xf: xf,
                     n: n,
-                    f_expr: f_expr
+                    functions: functions
                 };
 
                 if (metodo.includes('taylor')) {
@@ -661,7 +772,14 @@
             html += '<div class="result-label">Parámetros:</div>';
             html += '<div class="result-value">';
             html += 'x0 = ' + datos.detalles.x0 + '<br>';
-            html += 'y0 = ' + datos.detalles.y0 + '<br>';
+            
+            // Mostrar y0 como escalar o array
+            if (Array.isArray(datos.detalles.y0)) {
+                html += 'y0 = [' + datos.detalles.y0.join(', ') + ']<br>';
+            } else {
+                html += 'y0 = ' + datos.detalles.y0 + '<br>';
+            }
+            
             html += 'h = ' + datos.detalles.h.toFixed(6) + '<br>';
             html += 'n = ' + datos.detalles.n;
             html += '</div>';
@@ -669,11 +787,30 @@
 
             html += '<div class="result-item">';
             html += '<div class="result-label">Tabla de Resultados:</div>';
-            html += '<table class="tabla"><thead><tr><th>x</th><th>y</th></tr></thead><tbody>';
             
-            for (let i = 0; i < datos.pares.length; i++) {
-                html += '<tr><td>' + datos.pares[i][0].toFixed(6) + '</td>';
-                html += '<td>' + datos.pares[i][1].toFixed(6) + '</td></tr>';
+            // Determinar si es sistema (y_valores es array de arrays) o ecuación única (y_valores es array de arrays con un elemento)
+            let numVars = datos.y_valores.length;
+            let numPasos = datos.x_valores.length;
+            
+            html += '<table class="tabla"><thead><tr><th>x</th>';
+            for (let j = 0; j < numVars; j++) {
+                if (numVars === 1) {
+                    html += '<th>y</th>';
+                } else {
+                    html += '<th>y' + (j + 1) + '</th>';
+                }
+            }
+            html += '</tr></thead><tbody>';
+            
+            // Rellenar datos de la tabla
+            for (let i = 0; i < numPasos; i++) {
+                html += '<tr>';
+                html += '<td>' + datos.x_valores[i].toFixed(6) + '</td>';
+                for (let j = 0; j < numVars; j++) {
+                    let val = datos.y_valores[j][i];
+                    html += '<td>' + (val !== undefined && val !== null ? val.toFixed(6) : 'N/A') + '</td>';
+                }
+                html += '</tr>';
             }
 
             html += '</tbody></table>';
@@ -681,6 +818,80 @@
 
             resultadosDiv.innerHTML = '<h2>Resultados</h2>' + html;
             resultadosDiv.classList.add('show');
+        }
+
+
+        // Funciones para agregar/quitar funciones y condiciones iniciales
+
+        function agregarFuncion() {
+            functionCount++;
+            const container = document.getElementById('additionalFunctions');
+            const newDiv = document.createElement('div');
+            newDiv.className = 'function-input-group';
+            newDiv.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;';
+            newDiv.id = 'func-group-' + functionCount;
+            
+            newDiv.innerHTML = `
+                <div style="flex: 1;">
+                    <label for="f_expr_${functionCount}" style="font-size: 0.9em;">dy${functionCount}/dx = f${functionCount}(x, y₁, y₂, ...)</label>
+                    <input 
+                        type="text" 
+                        id="f_expr_${functionCount}" 
+                        class="f_expr_input"
+                        placeholder="ej: -y1"
+                    >
+                </div>
+                <button type="button" onclick="eliminarFuncion(${functionCount})" style="padding: 8px 12px; background-color: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">-</button>
+            `;
+            
+            container.appendChild(newDiv);
+            agregarY0(); // Agregar condición inicial correspondiente
+        }
+
+        function eliminarFuncion(index) {
+            const group = document.getElementById('func-group-' + index);
+            if (group) {
+                group.remove();
+                functionCount--;
+            }
+            
+            // Eliminar la condición inicial correspondiente
+            const y0Group = document.getElementById('y0-group-' + index);
+            if (y0Group) {
+                y0Group.remove();
+                y0Count--;
+            }
+        }
+
+        function agregarY0() {
+            y0Count++;
+            const container = document.getElementById('additionalY0s');
+            const newDiv = document.createElement('div');
+            newDiv.className = 'y0-input-group';
+            newDiv.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px;';
+            newDiv.id = 'y0-group-' + y0Count;
+            
+            newDiv.innerHTML = `
+                <label for="y0_${y0Count}" style="flex: 0 0 50px; padding-top: 8px;">y${y0Count}(x₀):</label>
+                <input 
+                    type="number" 
+                    id="y0_${y0Count}" 
+                    class="y0_input"
+                    placeholder="ej: 1"
+                    step="0.01"
+                >
+                <button type="button" onclick="eliminarY0(${y0Count})" style="padding: 8px 12px; background-color: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">-</button>
+            `;
+            
+            container.appendChild(newDiv);
+        }
+
+        function eliminarY0(index) {
+            const group = document.getElementById('y0-group-' + index);
+            if (group) {
+                group.remove();
+                y0Count--;
+            }
         }
 
         // Actualizar campos inicialmente
