@@ -47,11 +47,11 @@ class DiferenciasFinitas:
         
         detalles = {
             'metodo': 'Diferencias Divididas Hacia Adelante',
-            'nodos_x': x.tolist(),
-            'nodos_y': y.tolist(),
-            'tabla_diferencias': tabla_diferencias.tolist(),
-            'punto_evaluacion': x_eval,
-            'resultado': resultado
+            'nodos_x': [float(val) for val in x.tolist()],
+            'nodos_y': [float(val) for val in y.tolist()],
+            'tabla_diferencias': [[float(val) for val in row] for row in tabla_diferencias.tolist()],
+            'punto_evaluacion': float(x_eval),
+            'resultado': float(resultado)
         }
         
         return resultado, detalles
@@ -101,13 +101,13 @@ class DiferenciasFinitas:
         
         detalles = {
             'metodo': 'Diferencias Divididas Hacia Atrás',
-            'nodos_x': x.tolist(),
-            'nodos_y': y.tolist(),
-            'nodos_x_invertidos': x_inv.tolist(),
-            'nodos_y_invertidos': y_inv.tolist(),
-            'tabla_diferencias': tabla_diferencias.tolist(),
-            'punto_evaluacion': x_eval,
-            'resultado': resultado
+            'nodos_x': [float(val) for val in x.tolist()],
+            'nodos_y': [float(val) for val in y.tolist()],
+            'nodos_x_invertidos': [float(val) for val in x_inv.tolist()],
+            'nodos_y_invertidos': [float(val) for val in y_inv.tolist()],
+            'tabla_diferencias': [[float(val) for val in row] for row in tabla_diferencias.tolist()],
+            'punto_evaluacion': float(x_eval),
+            'resultado': float(resultado)
         }
         
         return resultado, detalles
@@ -151,11 +151,11 @@ class DiferenciasFinitas:
         
         detalles = {
             'metodo': 'Neville',
-            'nodos_x': x.tolist(),
-            'nodos_y': y.tolist(),
-            'tabla_neville': tabla_neville.tolist(),
-            'punto_evaluacion': x_eval,
-            'resultado': resultado
+            'nodos_x': [float(val) for val in x.tolist()],
+            'nodos_y': [float(val) for val in y.tolist()],
+            'tabla_diferencias': [[float(val) for val in row] for row in tabla_neville.tolist()],
+            'punto_evaluacion': float(x_eval),
+            'resultado': float(resultado)
         }
         
         return resultado, detalles

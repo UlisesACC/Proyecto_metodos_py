@@ -651,9 +651,9 @@
                         throw new Error('Debes ingresar los valores de la función');
                     }
                     
-                    const valoresF = valoresFStr.split(',').map(v => parseFloat(v.trim()));
+                    const valoresF = valoresFStr.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
                     
-                    if (valoresF.some(isNaN)) {
+                    if (valoresF.length === 0) {
                         throw new Error('Los valores de la función deben ser números válidos');
                     }
                     
@@ -667,8 +667,8 @@
                         if (!n2 || !valoresF2Str) {
                             throw new Error('Debe ingresar n2 y los valores para extrapolación');
                         }
-                        const valoresF2 = valoresF2Str.split(',').map(v => parseFloat(v.trim()));
-                        if (valoresF2.some(isNaN)) {
+                        const valoresF2 = valoresF2Str.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+                        if (valoresF2.length === 0) {
                             throw new Error('Los valores f2 deben ser números válidos');
                         }
                         requestBody.n2 = n2;

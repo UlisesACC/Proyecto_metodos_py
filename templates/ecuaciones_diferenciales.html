@@ -900,33 +900,38 @@
             html += '<div class="result-item">';
             html += '<div class="result-label">Tabla de Resultados:</div>';
             
-            // Determinar si es sistema (y_valores es array de arrays) o ecuación única (y_valores es array de arrays con un elemento)
-            let numVars = datos.y_valores.length;
-            let numPasos = datos.x_valores.length;
+            // Validar que los datos existan
+            if (!datos || !datos.y_valores || !Array.isArray(datos.y_valores) || !datos.x_valores || !Array.isArray(datos.x_valores)) {
+                html += '<div class="error-message">Error: Datos inválidos en la respuesta del servidor</div>';
+            } else {
+                // Determinar si es sistema (y_valores es array de arrays) o ecuación única (y_valores es array de arrays con un elemento)
+                let numVars = datos.y_valores.length;
+                let numPasos = datos.x_valores.length;
             
-            html += '<table class="tabla"><thead><tr><th>x</th>';
-            for (let j = 0; j < numVars; j++) {
-                if (numVars === 1) {
-                    html += '<th>y</th>';
-                } else {
-                    html += '<th>y' + (j + 1) + '</th>';
-                }
-            }
-            html += '</tr></thead><tbody>';
-            
-            // Rellenar datos de la tabla
-            for (let i = 0; i < numPasos; i++) {
-                html += '<tr>';
-                html += '<td>' + datos.x_valores[i].toFixed(6) + '</td>';
+                html += '<table class="tabla"><thead><tr><th>x</th>';
                 for (let j = 0; j < numVars; j++) {
-                    let val = datos.y_valores[j][i];
-                    html += '<td>' + (val !== undefined && val !== null ? val.toFixed(6) : 'N/A') + '</td>';
+                    if (numVars === 1) {
+                        html += '<th>y</th>';
+                    } else {
+                        html += '<th>y' + (j + 1) + '</th>';
+                    }
                 }
-                html += '</tr>';
-            }
+                html += '</tr></thead><tbody>';
+                
+                // Rellenar datos de la tabla
+                for (let i = 0; i < numPasos; i++) {
+                    html += '<tr>';
+                    html += '<td>' + datos.x_valores[i].toFixed(6) + '</td>';
+                    for (let j = 0; j < numVars; j++) {
+                        let val = datos.y_valores[j][i];
+                        html += '<td>' + (val !== undefined && val !== null ? val.toFixed(6) : 'N/A') + '</td>';
+                    }
+                    html += '</tr>';
+                }
 
-            html += '</tbody></table>';
-            html += '</div>';
+                html += '</tbody></table>';
+                html += '</div>';
+            }
 
             resultadosDiv.innerHTML = '<h2>Resultados</h2>' + html;
             resultadosDiv.classList.add('show');

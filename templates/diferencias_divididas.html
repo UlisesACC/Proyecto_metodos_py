@@ -377,10 +377,14 @@
             errorDiv.textContent = '';
 
             try {
-                const nodosX = nodosXStr.split(',').map(v => parseFloat(v.trim()));
-                const nodosY = nodosYStr.split(',').map(v => parseFloat(v.trim()));
+                if (!nodosXStr || !nodosYStr) {
+                    throw new Error('Los campos de nodos no pueden estar vacíos');
+                }
 
-                if (nodosX.some(isNaN) || nodosY.some(isNaN)) {
+                const nodosX = nodosXStr.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+                const nodosY = nodosYStr.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+
+                if (nodosX.length === 0 || nodosY.length === 0) {
                     throw new Error('Los nodos deben ser números válidos');
                 }
                 if (nodosX.length !== nodosY.length) {
@@ -422,7 +426,22 @@
         });
 
         function mostrarResultados(datos) {
+            // Validar que los datos existan
+            if (!datos || !datos.detalles || !datos.resultado) {
+                errorDiv.textContent = '❌ Error: Datos inválidos en la respuesta del servidor';
+                errorDiv.classList.add('show');
+                return;
+            }
+
             const detalles = datos.detalles;
+            
+            // Validar que detalles contiene los campos necesarios
+            if (!detalles.metodo || !Array.isArray(detalles.nodos_x) || !Array.isArray(detalles.nodos_y)) {
+                errorDiv.textContent = '❌ Error: Estructura de datos inválida';
+                errorDiv.classList.add('show');
+                return;
+            }
+
             let html = '';
 
             html += '<div class="result-item">';
@@ -452,15 +471,20 @@
 
             html += '<div class="result-item">';
             html += '<div class="result-label">Tabla de Diferencias:</div>';
-            html += '<table class="tabla">';
-            html += '<thead><tr><th>D0</th>';
             
-            const n = detalles.tabla_diferencias.length;
-            for (let j = 1; j < n; j++) {
-                html += '<th>D' + j + '</th>';
-            }
-            html += '</tr></thead>';
-            html += '<tbody>';
+            // Validar que tabla_diferencias existe y es un array
+            if (!detalles.tabla_diferencias || !Array.isArray(detalles.tabla_diferencias) || detalles.tabla_diferencias.length === 0) {
+                html += '<div class="error-message">No hay tabla de diferencias disponible</div>';
+            } else {
+                html += '<table class="tabla">';
+                html += '<thead><tr><th>D0</th>';
+                
+                const n = detalles.tabla_diferencias.length;
+                for (let j = 1; j < n; j++) {
+                    html += '<th>D' + j + '</th>';
+                }
+                html += '</tr></thead>';
+                html += '<tbody>';
 
             for (let i = 0; i < n; i++) {
                 html += '<tr>';
@@ -473,6 +497,7 @@
 
             html += '</tbody>';
             html += '</table>';
+            }
             html += '</div>';
 
             resultadosDiv.innerHTML = '<h2>Resultados</h2>' + html;

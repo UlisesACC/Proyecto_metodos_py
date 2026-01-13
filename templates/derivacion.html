@@ -540,11 +540,15 @@
             errorDiv.textContent = '';
 
             try {
-                const nodosX = nodosXStr.split(',').map(v => parseFloat(v.trim()));
-                const nodosY = nodosYStr.split(',').map(v => parseFloat(v.trim()));
+                if (!nodosXStr || !nodosYStr) {
+                    throw new Error('Los campos de nodos no pueden estar vacíos');
+                }
 
-                if (nodosX.some(isNaN) || nodosY.some(isNaN)) {
-                    throw new Error('Los nodos deben ser números válidos');
+                const nodosX = nodosXStr.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+                const nodosY = nodosYStr.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+
+                if (nodosX.length === 0 || nodosY.length === 0) {
+                    throw new Error('Los nodos deben ser números válidos separados por comas');
                 }
                 if (nodosX.length !== nodosY.length) {
                     throw new Error('Los nodos X e Y deben tener la misma cantidad de elementos');
