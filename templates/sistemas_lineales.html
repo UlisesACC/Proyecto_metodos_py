@@ -517,10 +517,16 @@
                     matriz_A.push(fila);
                 }
 
-                for (let i = 0; i < tamano; i++) {
-                    const val = parseFloat(document.getElementById(`b_${i}`).value);
-                    if (isNaN(val)) throw new Error('Valores inválidos en b');
-                    vector_b.push(val);
+                // Solo validar vector_b para métodos gaussianos
+                if (metodo.includes('gaussiana')) {
+                    for (let i = 0; i < tamano; i++) {
+                        const val = parseFloat(document.getElementById(`b_${i}`).value);
+                        if (isNaN(val)) throw new Error('Valores inválidos en b');
+                        vector_b.push(val);
+                    }
+                } else {
+                    // Para factorización, no necesitamos vector_b pero lo inicializamos vacío
+                    vector_b = [];
                 }
             } catch (error) {
                 errorDiv.textContent = '❌ ' + error.message;
