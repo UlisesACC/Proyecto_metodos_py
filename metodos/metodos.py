@@ -1,5 +1,6 @@
 import numpy as np
 from typing import List, Tuple, Union
+from sympy import symbols, sympify, diff, expand
 
 
 class DiferenciasFinitas:
@@ -1435,20 +1436,94 @@ class EcuacionesDiferenciales:
         return x, y, detalles
     
     @staticmethod
-    def taylor_orden_2(x0: float, y0: float, xf: float, n: int, f_expr: str, df_expr: str) -> Tuple[List, List, dict]:
+    def _taylor_derivatives(f_expr: str, order: int) -> List[str]:
         """
-        Método de Taylor orden 2
+        Calcula simbólicamente f, f', f'', f''' como strings usando derivada total.
+        
+        Para una EDO dy/dx = f(x,y):
+        - f(x,y)
+        - f'(x,y) = ∂f/∂x + ∂f/∂y * f
+        - f''(x,y) = ∂f'/∂x + ∂f'/∂y * f'
+        - f'''(x,y) = ∂f''/∂x + ∂f''/∂y * f''
+        
+        Args:
+            f_expr: Expresión de la función f(x,y)
+            order: Número de derivadas a calcular (1, 2 o 3)
+        
+        Returns:
+            Lista de strings [f, f', f'', f'''] hasta el orden especificado
         """
+        import re
+        
+        x, y = symbols('x y')
+        # Reemplazar y1 por y para compatibilidad
+        expr_str = f_expr.replace('y1', 'y')
+        
+        # Procesar la expresión para agregar multiplicación implícita
+        expr_str = _process_implicit_multiplication_metodos(expr_str)
+        
+        f = sympify(expr_str)
+        
+        # f (la función original)
+        derivs = [f]
+        
+        # f' (primera derivada total)
+        f_prime = diff(f, x) + diff(f, y) * f
+        
+        if order >= 1:
+            derivs.append(f_prime)
+        
+        if order >= 2:
+            # f'' (segunda derivada total de f')
+            # f''(x,y) = ∂f'/∂x + ∂f'/∂y * f'
+            f_double_prime = diff(f_prime, x) + diff(f_prime, y) * f_prime
+            derivs.append(f_double_prime)
+        
+        if order >= 3:
+            # f''' (tercera derivada total de f'')
+            # f'''(x,y) = ∂f''/∂x + ∂f''/∂y * f''
+            f_triple_prime = diff(f_double_prime, x) + diff(f_double_prime, y) * f_double_prime
+            derivs.append(f_triple_prime)
+        
+        # Simplificar y convertir a strings
+        simplified = []
+        for d in derivs:
+            # Expandir para obtener forma más clara
+            d_expanded = expand(d)
+            simplified.append(str(d_expanded))
+        
+        return simplified
+    
+    @staticmethod
+    def taylor_orden_2(x0: float, y0: float, xf: float, n: int, f_expr: str) -> Tuple[List, List, dict]:
+        """
+        Método de Taylor orden 2.
+        Calcula automáticamente la derivada f' usando derivada total.
+        """
+        from sympy import lambdify
+        
         h = (xf - x0) / n
         x = [x0]
         y = [y0]
+        
+        # Calcular derivadas simbólicamente
+        derivs = EcuacionesDiferenciales._taylor_derivatives(f_expr, 1)
+        f_str, df_str = str(derivs[0]), str(derivs[1])
+        
+        # Crear funciones numéricas compiladas
+        x_sym, y_sym = symbols('x y')
+        f_expr_sym = sympify(f_expr.replace('y1', 'y'))
+        df_expr_sym = sympify(df_str)
+        
+        f_func = lambdify((x_sym, y_sym), f_expr_sym, 'numpy')
+        df_func = lambdify((x_sym, y_sym), df_expr_sym, 'numpy')
         
         for i in range(n):
             xi = x[-1]
             yi = y[-1]
             
-            f_val = eval(f_expr.replace('x', str(xi)).replace('y', str(yi)))
-            df_val = eval(df_expr.replace('x', str(xi)).replace('y', str(yi)))
+            f_val = float(f_func(xi, yi))
+            df_val = float(df_func(xi, yi))
             
             yi_new = yi + h * f_val + (h**2 / 2) * df_val
             
@@ -1457,28 +1532,49 @@ class EcuacionesDiferenciales:
         
         detalles = {
             'metodo': 'Taylor Orden 2',
+            'x0': x0,
+            'y0': y0,
             'h': h,
-            'n': n
+            'n': n,
+            'f_expr': f_str,
+            'df_expr': df_str
         }
         
         return x, y, detalles
     
     @staticmethod
-    def taylor_orden_3(x0: float, y0: float, xf: float, n: int, f_expr: str, df_expr: str, ddf_expr: str) -> Tuple[List, List, dict]:
+    def taylor_orden_3(x0: float, y0: float, xf: float, n: int, f_expr: str) -> Tuple[List, List, dict]:
         """
-        Método de Taylor orden 3
+        Método de Taylor orden 3.
+        Calcula automáticamente las derivadas f' y f'' usando derivada total.
         """
+        from sympy import lambdify
+        
         h = (xf - x0) / n
         x = [x0]
         y = [y0]
+        
+        # Calcular derivadas simbólicamente
+        derivs = EcuacionesDiferenciales._taylor_derivatives(f_expr, 2)
+        f_str, df_str, ddf_str = str(derivs[0]), str(derivs[1]), str(derivs[2])
+        
+        # Crear funciones numéricas compiladas
+        x_sym, y_sym = symbols('x y')
+        f_expr_sym = sympify(f_expr.replace('y1', 'y'))
+        df_expr_sym = sympify(df_str)
+        ddf_expr_sym = sympify(ddf_str)
+        
+        f_func = lambdify((x_sym, y_sym), f_expr_sym, 'numpy')
+        df_func = lambdify((x_sym, y_sym), df_expr_sym, 'numpy')
+        ddf_func = lambdify((x_sym, y_sym), ddf_expr_sym, 'numpy')
         
         for i in range(n):
             xi = x[-1]
             yi = y[-1]
             
-            f_val = eval(f_expr.replace('x', str(xi)).replace('y', str(yi)))
-            df_val = eval(df_expr.replace('x', str(xi)).replace('y', str(yi)))
-            ddf_val = eval(ddf_expr.replace('x', str(xi)).replace('y', str(yi)))
+            f_val = float(f_func(xi, yi))
+            df_val = float(df_func(xi, yi))
+            ddf_val = float(ddf_func(xi, yi))
             
             yi_new = yi + h * f_val + (h**2 / 2) * df_val + (h**3 / 6) * ddf_val
             
@@ -1487,29 +1583,53 @@ class EcuacionesDiferenciales:
         
         detalles = {
             'metodo': 'Taylor Orden 3',
+            'x0': x0,
+            'y0': y0,
             'h': h,
-            'n': n
+            'n': n,
+            'f_expr': f_str,
+            'df_expr': df_str,
+            'ddf_expr': ddf_str
         }
         
         return x, y, detalles
     
     @staticmethod
-    def taylor_orden_4(x0: float, y0: float, xf: float, n: int, f_expr: str, df_expr: str, ddf_expr: str, dddf_expr: str) -> Tuple[List, List, dict]:
+    def taylor_orden_4(x0: float, y0: float, xf: float, n: int, f_expr: str) -> Tuple[List, List, dict]:
         """
-        Método de Taylor orden 4
+        Método de Taylor orden 4.
+        Calcula automáticamente las derivadas f', f'' y f''' usando derivada total.
         """
+        from sympy import lambdify
+        
         h = (xf - x0) / n
         x = [x0]
         y = [y0]
+        
+        # Calcular derivadas simbólicamente
+        derivs = EcuacionesDiferenciales._taylor_derivatives(f_expr, 3)
+        f_str, df_str, ddf_str, dddf_str = str(derivs[0]), str(derivs[1]), str(derivs[2]), str(derivs[3])
+        
+        # Crear funciones numéricas compiladas
+        x_sym, y_sym = symbols('x y')
+        f_expr_sym = sympify(f_expr.replace('y1', 'y'))
+        df_expr_sym = sympify(df_str)
+        ddf_expr_sym = sympify(ddf_str)
+        dddf_expr_sym = sympify(dddf_str)
+        
+        f_func = lambdify((x_sym, y_sym), f_expr_sym, 'numpy')
+        df_func = lambdify((x_sym, y_sym), df_expr_sym, 'numpy')
+        ddf_func = lambdify((x_sym, y_sym), ddf_expr_sym, 'numpy')
+        dddf_func = lambdify((x_sym, y_sym), dddf_expr_sym, 'numpy')
         
         for i in range(n):
             xi = x[-1]
             yi = y[-1]
             
-            f_val = eval(f_expr.replace('x', str(xi)).replace('y', str(yi)))
-            df_val = eval(df_expr.replace('x', str(xi)).replace('y', str(yi)))
-            ddf_val = eval(ddf_expr.replace('x', str(xi)).replace('y', str(yi)))
-            dddf_val = eval(dddf_expr.replace('x', str(xi)).replace('y', str(yi)))
+            f_val = float(f_func(xi, yi))
+            df_val = float(df_func(xi, yi))
+            ddf_val = float(ddf_func(xi, yi))
+            dddf_val = float(dddf_func(xi, yi))
             
             yi_new = yi + h * f_val + (h**2 / 2) * df_val + (h**3 / 6) * ddf_val + (h**4 / 24) * dddf_val
             
@@ -1518,8 +1638,14 @@ class EcuacionesDiferenciales:
         
         detalles = {
             'metodo': 'Taylor Orden 4',
+            'x0': x0,
+            'y0': y0,
             'h': h,
-            'n': n
+            'n': n,
+            'f_expr': f_str,
+            'df_expr': df_str,
+            'ddf_expr': ddf_str,
+            'dddf_expr': dddf_str
         }
         
         return x, y, detalles
@@ -1627,13 +1753,18 @@ class EcuacionesDiferenciales:
     @staticmethod
     def adams_bashforth(x0: float, y0: float, xf: float, n: int, f_expr: str) -> Tuple[List, List, dict]:
         """
-        Método de Adams-Bashforth (multi-paso)
+        Método de Adams-Bashforth (multi-paso) de 4 pasos.
+        Requiere al menos n >= 4 para usar el método de Adams.
+        Si n < 4, se usa solo RK4.
         """
+        if n < 4:
+            raise ValueError("Adams-Bashforth requiere al menos 4 pasos (n >= 4)")
+        
         h = (xf - x0) / n
         x = [x0]
         y = [y0]
         
-        # Usar RK4 para los primeros 3 pasos
+        # Usar RK4 para los primeros 3 pasos (genera 4 puntos incluyendo el inicial)
         for i in range(3):
             xi = x[-1]
             yi = y[-1]
@@ -1647,12 +1778,13 @@ class EcuacionesDiferenciales:
             x.append(xi + h)
             y.append(yi_new)
         
-        # Adams-Bashforth de 4 pasos
+        # Calcular valores de f para los 4 puntos iniciales
         f_vals = []
         for xi, yi in zip(x, y):
             f_vals.append(eval(f_expr.replace('x', str(xi)).replace('y', str(yi))))
         
-        for i in range(3, n):
+        # Adams-Bashforth de 4 pasos para los pasos restantes (n - 3 pasos más)
+        for i in range(n - 3):
             yi_new = y[-1] + (h/24) * (55*f_vals[-1] - 59*f_vals[-2] + 37*f_vals[-3] - 9*f_vals[-4])
             xi_new = x[-1] + h
             
@@ -1674,13 +1806,18 @@ class EcuacionesDiferenciales:
     @staticmethod
     def adams_moulton(x0: float, y0: float, xf: float, n: int, f_expr: str) -> Tuple[List, List, dict]:
         """
-        Método de Adams-Moulton (implícito)
+        Método de Adams-Moulton (predictor-corrector) de 4 pasos.
+        Requiere al menos n >= 4 para usar el método de Adams.
+        Si n < 4, se usa solo RK4.
         """
+        if n < 4:
+            raise ValueError("Adams-Moulton requiere al menos 4 pasos (n >= 4)")
+        
         h = (xf - x0) / n
         x = [x0]
         y = [y0]
         
-        # Usar RK4 para los primeros 3 pasos
+        # Usar RK4 para los primeros 3 pasos (genera 4 puntos incluyendo el inicial)
         for i in range(3):
             xi = x[-1]
             yi = y[-1]
@@ -1694,12 +1831,13 @@ class EcuacionesDiferenciales:
             x.append(xi + h)
             y.append(yi_new)
         
-        # Adams-Moulton de 4 pasos
+        # Calcular valores de f para los 4 puntos iniciales
         f_vals = []
         for xi, yi in zip(x, y):
             f_vals.append(eval(f_expr.replace('x', str(xi)).replace('y', str(yi))))
         
-        for i in range(3, n):
+        # Adams-Moulton (predictor-corrector) para los pasos restantes (n - 3 pasos más)
+        for i in range(n - 3):
             # Predictor: Adams-Bashforth
             y_pred = y[-1] + (h/24) * (55*f_vals[-1] - 59*f_vals[-2] + 37*f_vals[-3] - 9*f_vals[-4])
             x_new = x[-1] + h
@@ -1831,6 +1969,36 @@ class EcuacionesDiferenciales:
         }
         
         return x, y_vals, detalles
+
+
+def _process_implicit_multiplication_metodos(expr: str) -> str:
+    """
+    Procesa una expresión para agregar multiplicación explícita donde sea necesario.
+    Por ejemplo: '2y' -> '2*y', 'xy' -> 'x*y', '2(x+1)' -> '2*(x+1)', etc.
+    """
+    import re
+    
+    result = expr
+    
+    # Agregar * entre número y variable: 2y -> 2*y, 3x -> 3*x
+    result = re.sub(r'(\d)([xy])', r'\1*\2', result)
+    
+    # Agregar * entre variable y variable: xy -> x*y, yx -> y*x (pero no en exponentes)
+    result = re.sub(r'([xy])([xy])', r'\1*\2', result)
+    
+    # Agregar * entre número y paréntesis: 2(...) -> 2*(...)
+    result = re.sub(r'(\d)\(', r'\1*(', result)
+    
+    # Agregar * entre variable y paréntesis: x(...) -> x*(...)
+    result = re.sub(r'([xy])\(', r'\1*(', result)
+    
+    # Agregar * entre paréntesis y número: (...)2 -> (...)*2
+    result = re.sub(r'\)(\d)', r')*\1', result)
+    
+    # Agregar * entre paréntesis y variable: (...)x -> (...)*x
+    result = re.sub(r'\)([xy])', r')*\1', result)
+    
+    return result
 
 
 class EcuacionesUnaVariable:

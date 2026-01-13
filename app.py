@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import numpy as np
-from sympy import symbols, diff, lambdify, parsing
+from sympy import symbols, diff, lambdify, parsing, sympify, expand
 from metodos.metodos import DiferenciasFinitas, Derivacion, Integracion, SistemasLineales, EcuacionesDiferenciales, EcuacionesUnaVariable
 
 app = Flask(__name__)
@@ -52,48 +52,98 @@ def health():
 
 @app.route('/api/calcular-derivadas', methods=['POST'])
 def api_calcular_derivadas():
-    """Calcular derivadas automáticamente"""
+    """Calcular derivadas totales automáticamente usando sympy para métodos de Taylor"""
     try:
         datos = request.get_json()
-        f_expr = datos.get('f_expr', '')
-        orden = datos.get('orden', 1)  # 1, 2, 3 o 4
+        f_expr_str = datos.get('f_expr', '')
+        orden = datos.get('orden', 3)
         
-        if not f_expr:
+        if not f_expr_str:
             return jsonify({'error': 'Se requiere una expresión'}), 400
         
         try:
-            # Crear símbolos para x e y (SIN real=True para que parsing.parse_expr funcione correctamente)
+            # Crear símbolos
             x, y = symbols('x y')
             
-            # Parsear la expresión
-            expr = parsing.parse_expr(f_expr)
+            # Parsear la expresión (reemplazar y1 por y para compatibilidad)
+            expr_str = f_expr_str.replace('y1', 'y')
             
-            # Calcular derivadas
-            derivatives = {}
-            current_expr = expr
+            # Procesar la expresión para agregar multiplicación implícita
+            # Por ejemplo: 2y -> 2*y, xy -> x*y, etc.
+            processed_expr = _process_implicit_multiplication(expr_str)
             
-            for i in range(1, int(orden) + 1):
-                # Derivar respecto a y (porque dy/dx depende de y)
-                # La derivada de f(x,y) respecto a x es: df/dx + df/dy * dy/dx
-                # Pero como dy/dx = f(x,y), necesitamos f'(x,y) = df/dy
-                
-                derivada_y = diff(current_expr, y)
-                derivatives[f'df_{i}'] = str(derivada_y)
-                current_expr = derivada_y
+            f = sympify(processed_expr)
             
-            return jsonify({
-                'f_expr': f_expr,
-                'df_expr': derivatives.get('df_1', '0'),
-                'ddf_expr': derivatives.get('df_2', '0'),
-                'dddf_expr': derivatives.get('df_3', '0'),
+            # Calcular derivadas totales usando el método correcto
+            # f (función original)
+            derivs = [f]
+            
+            # f' = ∂f/∂x + ∂f/∂y * f
+            f_prime = diff(f, x) + diff(f, y) * f
+            
+            if orden >= 1:
+                derivs.append(f_prime)
+            
+            if orden >= 2:
+                # f'' = ∂f'/∂x + ∂f'/∂y * f'
+                f_double_prime = diff(f_prime, x) + diff(f_prime, y) * f_prime
+                derivs.append(f_double_prime)
+            
+            if orden >= 3:
+                # f''' = ∂f''/∂x + ∂f''/∂y * f''
+                f_triple_prime = diff(f_double_prime, x) + diff(f_double_prime, y) * f_double_prime
+                derivs.append(f_triple_prime)
+            
+            # Construir respuesta simplificando las expresiones
+            resultado = {
+                'f_expr': f_expr_str,
                 'orden': orden
-            }), 200
+            }
+            
+            if len(derivs) > 1:
+                resultado['df_expr'] = str(expand(derivs[1]))
+            if len(derivs) > 2:
+                resultado['ddf_expr'] = str(expand(derivs[2]))
+            if len(derivs) > 3:
+                resultado['dddf_expr'] = str(expand(derivs[3]))
+            
+            return jsonify(resultado), 200
             
         except Exception as e:
             return jsonify({'error': f'Error al calcular derivadas: {str(e)}'}), 400
     
     except Exception as e:
         return jsonify({'error': f'Error en el servidor: {str(e)}'}), 500
+
+
+def _process_implicit_multiplication(expr: str) -> str:
+    """
+    Procesa una expresión para agregar multiplicación explícita donde sea necesario.
+    Por ejemplo: '2y' -> '2*y', 'xy' -> 'x*y', '2(x+1)' -> '2*(x+1)', etc.
+    """
+    import re
+    
+    result = expr
+    
+    # Agregar * entre número y variable: 2y -> 2*y, 3x -> 3*x
+    result = re.sub(r'(\d)([xy])', r'\1*\2', result)
+    
+    # Agregar * entre variable y variable: xy -> x*y, yx -> y*x (pero no en exponentes)
+    result = re.sub(r'([xy])([xy])', r'\1*\2', result)
+    
+    # Agregar * entre número y paréntesis: 2(...) -> 2*(...)
+    result = re.sub(r'(\d)\(', r'\1*(', result)
+    
+    # Agregar * entre variable y paréntesis: x(...) -> x*(...)
+    result = re.sub(r'([xy])\(', r'\1*(', result)
+    
+    # Agregar * entre paréntesis y número: (...)2 -> (...)*2
+    result = re.sub(r'\)(\d)', r')*\1', result)
+    
+    # Agregar * entre paréntesis y variable: (...)x -> (...)*x
+    result = re.sub(r'\)([xy])', r')*\1', result)
+    
+    return result
 
 @app.route('/api/diferencias-divididas', methods=['POST'])
 def api_diferencias_divididas():
@@ -355,11 +405,16 @@ def api_ecuaciones_diferenciales():
         functions = datos.get('functions')  # Lista de funciones para sistemas
         f_expr = datos.get('f_expr')  # String para ecuación única
         
+        # Si viene functions con una sola función, convertir a f_expr para ecuación única
+        if functions and len(functions) == 1 and not f_expr:
+            f_expr = functions[0]
+            functions = None
+        
         if not all([metodo, x0 is not None, y0 is not None, xf is not None, n is not None]):
             return jsonify({'error': 'Faltan campos requeridos'}), 400
         
-        # Determinar si es sistema o ecuación única
-        is_sistema = isinstance(y0, list) or functions is not None
+        # Determinar si es sistema (más de una función) o ecuación única
+        is_sistema = (functions is not None and len(functions) > 1)
         
         try:
             x0 = float(x0)
@@ -371,7 +426,11 @@ def api_ecuaciones_diferenciales():
                     y0 = [y0]
                 y0 = [float(v) for v in y0]
             else:
-                y0 = float(y0)
+                # Para ecuación única, tomar el primer valor si es lista
+                if isinstance(y0, list):
+                    y0 = float(y0[0])
+                else:
+                    y0 = float(y0)
         except (ValueError, TypeError) as e:
             return jsonify({'error': f'Datos inválidos: {str(e)}'}), 400
         
@@ -401,23 +460,14 @@ def api_ecuaciones_diferenciales():
         if metodo == 'euler':
             x_vals, y_vals, detalles = EcuacionesDiferenciales.euler(x0, y0, xf, n, f_expr)
         elif metodo == 'taylor_2':
-            df_expr = datos.get('df_expr')
-            if not df_expr:
-                return jsonify({'error': 'Se requiere df_expr para Taylor orden 2'}), 400
-            x_vals, y_vals, detalles = EcuacionesDiferenciales.taylor_orden_2(x0, y0, xf, n, f_expr, df_expr)
+            # Las derivadas se calculan automáticamente usando SymPy
+            x_vals, y_vals, detalles = EcuacionesDiferenciales.taylor_orden_2(x0, y0, xf, n, f_expr)
         elif metodo == 'taylor_3':
-            df_expr = datos.get('df_expr')
-            ddf_expr = datos.get('ddf_expr')
-            if not all([df_expr, ddf_expr]):
-                return jsonify({'error': 'Se requieren derivadas para Taylor orden 3'}), 400
-            x_vals, y_vals, detalles = EcuacionesDiferenciales.taylor_orden_3(x0, y0, xf, n, f_expr, df_expr, ddf_expr)
+            # Las derivadas se calculan automáticamente usando SymPy
+            x_vals, y_vals, detalles = EcuacionesDiferenciales.taylor_orden_3(x0, y0, xf, n, f_expr)
         elif metodo == 'taylor_4':
-            df_expr = datos.get('df_expr')
-            ddf_expr = datos.get('ddf_expr')
-            dddf_expr = datos.get('dddf_expr')
-            if not all([df_expr, ddf_expr, dddf_expr]):
-                return jsonify({'error': 'Se requieren derivadas para Taylor orden 4'}), 400
-            x_vals, y_vals, detalles = EcuacionesDiferenciales.taylor_orden_4(x0, y0, xf, n, f_expr, df_expr, ddf_expr, dddf_expr)
+            # Las derivadas se calculan automáticamente usando SymPy
+            x_vals, y_vals, detalles = EcuacionesDiferenciales.taylor_orden_4(x0, y0, xf, n, f_expr)
         elif metodo == 'rk3':
             x_vals, y_vals, detalles = EcuacionesDiferenciales.runge_kutta_3(x0, y0, xf, n, f_expr)
         elif metodo == 'rk4':

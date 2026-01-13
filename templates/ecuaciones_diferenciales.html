@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ecuaciones Diferenciales - Métodos Numéricos</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
         .back-button {
@@ -383,34 +382,82 @@
                     <small>Usa 'x' para la variable independiente. Usa 'y1', 'y2', 'y3'... para las variables dependientes. Ej: y2 (primera función), -y1 (segunda función)</small>
                 </div>
 
-                <div class="form-group hidden-fields" id="df_group">
-                    <label for="df_expr">Primera Derivada f'(x, y)</label>
-                    <input 
-                        type="text" 
-                        id="df_expr" 
-                        placeholder="ej: 1 + y"
-                    >
-                    <small>Para Taylor orden 2+</small>
-                </div>
+                <!-- Campos de derivadas con botones para Taylor -->
+                <div id="derivadasSection" style="display: none;">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <button 
+                            type="button"
+                            onclick="calcularTodasLasDerivadas(event)"
+                            style="width: 100%; padding: 12px 20px; background-color: #9c27b0; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; font-weight: bold; transition: background-color 0.3s ease;"
+                            onmouseover="this.style.backgroundColor='#7b1fa2'"
+                            onmouseout="this.style.backgroundColor='#9c27b0'"
+                        >
+                            CALCULAR TODAS LAS DERIVADAS AUTOMÁTICAMENTE
+                        </button>
+                    </div>
 
-                <div class="form-group hidden-fields" id="ddf_group">
-                    <label for="ddf_expr">Segunda Derivada f''(x, y)</label>
-                    <input 
-                        type="text" 
-                        id="ddf_expr" 
-                        placeholder="ej: 1"
-                    >
-                    <small>Para Taylor orden 3+</small>
-                </div>
+                    <div class="form-group" id="df_group" style="display: none;">
+                        <label for="df_expr">Primera Derivada f'(x, y)</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input 
+                                type="text" 
+                                id="df_expr" 
+                                placeholder="Se calculará automáticamente"
+                                readonly
+                                style="flex: 1; background-color: #f0f0f0; color: #333; cursor: text;"
+                            >
+                            <button 
+                                type="button" 
+                                class="btn-calcular-derivada"
+                                onclick="calcularDerivadaEspecifica('df')"
+                                style="padding: 10px 20px; background-color: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; white-space: nowrap;"
+                            >
+                                f'
+                            </button>
+                        </div>
+                    </div>
 
-                <div class="form-group hidden-fields" id="dddf_group">
-                    <label for="dddf_expr">Tercera Derivada f'''(x, y)</label>
-                    <input 
-                        type="text" 
-                        id="dddf_expr" 
-                        placeholder="ej: 0"
-                    >
-                    <small>Para Taylor orden 4</small>
+                    <div class="form-group" id="ddf_group" style="display: none;">
+                        <label for="ddf_expr">Segunda Derivada f''(x, y)</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input 
+                                type="text" 
+                                id="ddf_expr" 
+                                placeholder="Se calculará automáticamente"
+                                readonly
+                                style="flex: 1; background-color: #f0f0f0; color: #333; cursor: text;"
+                            >
+                            <button 
+                                type="button" 
+                                class="btn-calcular-derivada"
+                                onclick="calcularDerivadaEspecifica('ddf')"
+                                style="padding: 10px 20px; background-color: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; white-space: nowrap;"
+                            >
+                                f''
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="dddf_group" style="display: none;">
+                        <label for="dddf_expr">Tercera Derivada f'''(x, y)</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input 
+                                type="text" 
+                                id="dddf_expr" 
+                                placeholder="Se calculará automáticamente"
+                                readonly
+                                style="flex: 1; background-color: #f0f0f0; color: #333; cursor: text;"
+                            >
+                            <button 
+                                type="button" 
+                                class="btn-calcular-derivada"
+                                onclick="calcularDerivadaEspecifica('dddf')"
+                                style="padding: 10px 20px; background-color: #ff9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; white-space: nowrap;"
+                            >
+                                f'''
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -569,91 +616,177 @@
 
         function actualizarCampos() {
             const metodo = document.querySelector('input[name="metodo"]:checked').value;
+            const derivadasSection = document.getElementById('derivadasSection');
             const dfGroup = document.getElementById('df_group');
             const ddfGroup = document.getElementById('ddf_group');
             const dddfGroup = document.getElementById('dddf_group');
 
-            dfGroup.classList.remove('show');
-            ddfGroup.classList.remove('show');
-            dddfGroup.classList.remove('show');
+            // Ocultar todo por defecto
+            derivadasSection.style.display = 'none';
+            dfGroup.style.display = 'none';
+            ddfGroup.style.display = 'none';
+            dddfGroup.style.display = 'none';
 
-            // Determinar orden de derivadas a calcular
-            let orden = 0;
+            // Mostrar solo si es Taylor
             if (metodo === 'taylor_2') {
-                orden = 1;
-                dfGroup.classList.add('show');
+                derivadasSection.style.display = 'block';
+                dfGroup.style.display = 'block';
             } else if (metodo === 'taylor_3') {
-                orden = 2;
-                dfGroup.classList.add('show');
-                ddfGroup.classList.add('show');
+                derivadasSection.style.display = 'block';
+                dfGroup.style.display = 'block';
+                ddfGroup.style.display = 'block';
             } else if (metodo === 'taylor_4') {
-                orden = 3;
-                dfGroup.classList.add('show');
-                ddfGroup.classList.add('show');
-                dddfGroup.classList.add('show');
-            } else if (['rk3', 'rk4', 'rkf'].includes(metodo)) {
-                // Runge-Kutta también puede usar derivadas si el usuario lo desea
-                orden = 1; // Mostrar solo la primera derivada
-                dfGroup.classList.add('show');
-            }
-
-            // Si se requieren derivadas, calcularlas automáticamente
-            if (orden > 0) {
-                calcularDerivadas();
+                derivadasSection.style.display = 'block';
+                dfGroup.style.display = 'block';
+                ddfGroup.style.display = 'block';
+                dddfGroup.style.display = 'block';
             }
         }
 
-        async function calcularDerivadas() {
+        async function calcularTodasLasDerivadas(evento) {
+            let btnCalcular = null;
             try {
-                const fExprElements = document.querySelectorAll('.f_expr_input');
+                const fExprInput = document.querySelector('.f_expr_input');
                 
-                // Procesar solo la primera función (para Taylor usualmente es una)
-                if (fExprElements.length === 0) return;
+                if (!fExprInput) {
+                    alert('❌ No se encontró la función');
+                    return;
+                }
                 
-                const fExpr = fExprElements[0].value.trim();
-                if (!fExpr) return;
+                const fExpr = fExprInput.value.trim();
+                if (!fExpr) {
+                    alert('❌ Por favor ingresa una función primero');
+                    return;
+                }
+
+                // Obtener el botón que generó el evento o buscarlo en el DOM
+                btnCalcular = evento ? evento.target : document.querySelector('.form-group button[onclick*="calcularTodasLasDerivadas"]');
+                if (!btnCalcular) {
+                    btnCalcular = document.querySelector('[onclick*="calcularTodasLasDerivadas"]');
+                }
+                
+                const textOriginal = btnCalcular ? btnCalcular.innerHTML : '';
+                if (btnCalcular) {
+                    btnCalcular.innerHTML = '⏳ Calculando derivadas...';
+                    btnCalcular.disabled = true;
+                }
+
+                // Determinar el orden máximo necesario según el método seleccionado
+                const metodo = document.querySelector('input[name="metodo"]:checked').value;
+                let orden = 1;
+                if (metodo === 'taylor_3') orden = 2;
+                if (metodo === 'taylor_4') orden = 3;
 
                 const response = await fetch('/api/calcular-derivadas', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        f_expr: fExpr,
-                        orden: 3  // Calcular hasta 3 derivadas
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ f_expr: fExpr, orden: orden })
                 });
 
                 if (!response.ok) {
-                    console.error('Error al calcular derivadas:', response.statusText);
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error en la respuesta del servidor');
+                }
+
+                const datos = await response.json();
+                
+                // Llenar los campos de derivadas
+                if (document.getElementById('df_expr')) {
+                    document.getElementById('df_expr').value = datos.df_expr || '';
+                }
+                if (document.getElementById('ddf_expr')) {
+                    document.getElementById('ddf_expr').value = datos.ddf_expr || '';
+                }
+                if (document.getElementById('dddf_expr')) {
+                    document.getElementById('dddf_expr').value = datos.dddf_expr || '';
+                }
+
+                // Restaurar botón
+                if (btnCalcular) {
+                    btnCalcular.innerHTML = '✅ ¡Derivadas Calculadas!';
+                    setTimeout(() => {
+                        btnCalcular.innerHTML = textOriginal;
+                        btnCalcular.disabled = false;
+                    }, 2000);
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error al calcular las derivadas: ' + error.message);
+                if (btnCalcular) {
+                    btnCalcular.disabled = false;
+                    btnCalcular.innerHTML = '🔢 CALCULAR TODAS LAS DERIVADAS AUTOMÁTICAMENTE';
+                }
+            }
+        }
+
+        async function calcularDerivadaEspecifica(tipo) {
+            try {
+                const fExprInput = document.querySelector('.f_expr_input');
+                
+                if (!fExprInput) {
+                    alert('❌ No se encontró la función');
+                    return;
+                }
+                
+                const fExpr = fExprInput.value.trim();
+                if (!fExpr) {
+                    alert('❌ Por favor ingresa una función primero');
+                    return;
+                }
+
+                // Determinar el orden necesario
+                let orden = 1;
+                if (tipo === 'ddf') orden = 2;
+                if (tipo === 'dddf') orden = 3;
+
+                const response = await fetch('/api/calcular-derivadas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ f_expr: fExpr, orden: orden })
+                });
+
+                if (!response.ok) {
+                    alert('❌ Error al calcular derivadas');
                     return;
                 }
 
                 const datos = await response.json();
-
-                // Rellenar los campos de derivadas
-                document.getElementById('df_expr').value = datos.df_expr || '';
-                document.getElementById('ddf_expr').value = datos.ddf_expr || '';
-                document.getElementById('dddf_expr').value = datos.dddf_expr || '';
-
-                // Marcar como readonly
-                document.getElementById('df_expr').readOnly = true;
-                document.getElementById('ddf_expr').readOnly = true;
-                document.getElementById('dddf_expr').readOnly = true;
+                
+                // Llenar el campo correspondiente
+                if (tipo === 'df' && document.getElementById('df_expr')) {
+                    document.getElementById('df_expr').value = datos.df_expr || '';
+                }
+                if (tipo === 'ddf' && document.getElementById('ddf_expr')) {
+                    document.getElementById('ddf_expr').value = datos.ddf_expr || '';
+                }
+                if (tipo === 'dddf' && document.getElementById('dddf_expr')) {
+                    document.getElementById('dddf_expr').value = datos.dddf_expr || '';
+                }
 
             } catch (error) {
-                console.error('Error calculando derivadas:', error);
+                console.error('Error:', error);
+                alert('❌ Error al calcular la derivada');
             }
         }
 
-        // Calcular derivadas cuando cambia la función
+        // Calcular derivadas cuando cambia la función o el método
         document.addEventListener('DOMContentLoaded', function() {
-            const funcionesContainer = document.getElementById('funciones-container');
-            if (funcionesContainer) {
-                // Al cambiar cualquier input de función, recalcular derivadas
-                funcionesContainer.addEventListener('change', function(e) {
+            // Listener en cambio de método (radios)
+            const metodosRadios = document.querySelectorAll('input[name="metodo"]');
+            metodosRadios.forEach(radio => {
+                radio.addEventListener('change', actualizarCampos);
+            });
+
+            // Listener en cambio de función (event delegation)
+            const functionsContainer = document.getElementById('functionsContainer');
+            if (functionsContainer) {
+                functionsContainer.addEventListener('input', function(e) {
                     if (e.target.classList.contains('f_expr_input')) {
-                        calcularDerivadas();
+                        const metodo = document.querySelector('input[name="metodo"]:checked');
+                        if (metodo && metodo.value.startsWith('taylor_')) {
+                            // No calcular automáticamente, dejar que el usuario presione el botón
+                        }
                     }
                 });
             }
@@ -713,29 +846,8 @@
                     functions: functions
                 };
 
-                if (metodo.includes('taylor')) {
-                    const df_expr = document.getElementById('df_expr').value.trim();
-                    if (!df_expr) {
-                        throw new Error('Se requiere la derivada para Taylor');
-                    }
-                    requestBody.df_expr = df_expr;
-
-                    if (metodo === 'taylor_3' || metodo === 'taylor_4') {
-                        const ddf_expr = document.getElementById('ddf_expr').value.trim();
-                        if (!ddf_expr) {
-                            throw new Error('Se requiere la segunda derivada');
-                        }
-                        requestBody.ddf_expr = ddf_expr;
-                    }
-
-                    if (metodo === 'taylor_4') {
-                        const dddf_expr = document.getElementById('dddf_expr').value.trim();
-                        if (!dddf_expr) {
-                            throw new Error('Se requiere la tercera derivada');
-                        }
-                        requestBody.dddf_expr = dddf_expr;
-                    }
-                }
+                // Las derivadas de Taylor se calculan automáticamente en el backend
+                // No es necesario enviarlas
 
                 const response = await fetch('/api/ecuaciones-diferenciales', {
                     method: 'POST',
