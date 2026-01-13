@@ -261,58 +261,118 @@ def api_integracion():
         metodo = datos.get('metodo')
         a = datos.get('a')
         b = datos.get('b')
+        f_expr = datos.get('f_expr')  # Para métodos con función
         n = datos.get('n')
         valores_f = datos.get('valores_f')
+        tolerancia = datos.get('tolerancia')
         
         # Validar campos requeridos
-        if not all([metodo, a is not None, b is not None, n, valores_f]):
+        if not all([metodo, a is not None, b is not None]):
             return jsonify({'error': 'Faltan campos requeridos'}), 400
         
-        # Convertir a tipos correctos
         try:
             a = float(a)
             b = float(b)
-            n = int(n)
-            valores_f = [float(v) for v in valores_f]
         except (ValueError, TypeError):
-            return jsonify({'error': 'Datos inválidos'}), 400
+            return jsonify({'error': 'Límites de integración inválidos'}), 400
         
-        # Ejecutar método seleccionado
-        if metodo == 'trapecio':
-            resultado, detalles = Integracion.trapecio(a, b, n, valores_f)
-        elif metodo == 'simpson_1_3':
-            resultado, detalles = Integracion.simpson_1_3(a, b, n, valores_f)
-        elif metodo == 'simpson_3_8':
-            resultado, detalles = Integracion.simpson_3_8(a, b, n, valores_f)
-        elif metodo == 'cuadratura_gaussiana':
-            n_points = datos.get('n_points', 2)
-            try:
-                n_points = int(n_points)
-            except (ValueError, TypeError):
-                n_points = 2
-            resultado, detalles = Integracion.cuadratura_gaussiana(a, b, valores_f, n_points)
-        elif metodo == 'trapecio_multiple':
-            resultado, detalles = Integracion.trapecio_multiple(a, b, n, valores_f)
-        elif metodo == 'simpson_1_3_multiple':
-            resultado, detalles = Integracion.simpson_1_3_multiple(a, b, n, valores_f)
-        elif metodo == 'extrapolacion':
-            n2 = datos.get('n2')
-            valores_f2 = datos.get('valores_f2')
-            
-            if not all([n2 is not None, valores_f2]):
-                return jsonify({'error': 'Faltan campos para extrapolación'}), 400
-            
-            try:
-                n2 = int(n2)
-                valores_f2 = [float(v) for v in valores_f2]
-            except (ValueError, TypeError):
-                return jsonify({'error': 'Datos inválidos para extrapolación'}), 400
-            
-            resultado, detalles = Integracion.extrapolacion_richardson_integracion(
-                a, b, n, n2, valores_f, valores_f2
-            )
+        # Si viene una función (cuadratura adaptiva)
+        if f_expr:
+            if metodo == 'cuadratura_adaptiva':
+                if not tolerancia:
+                    tolerancia = 1e-6
+                try:
+                    tolerancia = float(tolerancia)
+                except (ValueError, TypeError):
+                    tolerancia = 1e-6
+                
+                resultado, detalles = Integracion.cuadratura_adaptiva(f_expr, a, b, tolerancia)
+            else:
+                # Para otros métodos con función, calcular valores en puntos
+                if n is None:
+                    return jsonify({'error': 'Se requiere n para este método'}), 400
+                try:
+                    n = int(n)
+                except (ValueError, TypeError):
+                    return jsonify({'error': 'n inválido'}), 400
+                
+                # Compilar la función y evaluar en puntos
+                from sympy import lambdify
+                x_sym = symbols('x')
+                f_sym = sympify(f_expr)
+                f_func = lambdify(x_sym, f_sym, 'numpy')
+                
+                # Generar puntos
+                x_points = np.linspace(a, b, n + 1)
+                try:
+                    valores_f = [float(f_func(xi)) for xi in x_points]
+                except:
+                    return jsonify({'error': 'Error evaluando la función'}), 400
+                
+                # Ejecutar el método con los valores calculados
+                if metodo == 'trapecio':
+                    resultado, detalles = Integracion.trapecio(a, b, n, valores_f)
+                elif metodo == 'simpson_1_3':
+                    resultado, detalles = Integracion.simpson_1_3(a, b, n, valores_f)
+                elif metodo == 'simpson_3_8':
+                    resultado, detalles = Integracion.simpson_3_8(a, b, n, valores_f)
+                elif metodo == 'cuadratura_gaussiana':
+                    n_points = datos.get('n_points', 2)
+                    try:
+                        n_points = int(n_points)
+                    except (ValueError, TypeError):
+                        n_points = 2
+                    resultado, detalles = Integracion.cuadratura_gaussiana(a, b, valores_f, n_points)
+                else:
+                    return jsonify({'error': 'Método no válido'}), 400
+        
         else:
-            return jsonify({'error': 'Método no válido'}), 400
+            # Métodos con valores numéricos
+            if not all([n, valores_f]):
+                return jsonify({'error': 'Faltan campos requeridos'}), 400
+            
+            try:
+                n = int(n)
+                valores_f = [float(v) for v in valores_f]
+            except (ValueError, TypeError):
+                return jsonify({'error': 'Datos inválidos'}), 400
+            
+            # Ejecutar método seleccionado
+            if metodo == 'trapecio':
+                resultado, detalles = Integracion.trapecio(a, b, n, valores_f)
+            elif metodo == 'simpson_1_3':
+                resultado, detalles = Integracion.simpson_1_3(a, b, n, valores_f)
+            elif metodo == 'simpson_3_8':
+                resultado, detalles = Integracion.simpson_3_8(a, b, n, valores_f)
+            elif metodo == 'cuadratura_gaussiana':
+                n_points = datos.get('n_points', 2)
+                try:
+                    n_points = int(n_points)
+                except (ValueError, TypeError):
+                    n_points = 2
+                resultado, detalles = Integracion.cuadratura_gaussiana(a, b, valores_f, n_points)
+            elif metodo == 'trapecio_multiple':
+                resultado, detalles = Integracion.trapecio_multiple(a, b, n, valores_f)
+            elif metodo == 'simpson_1_3_multiple':
+                resultado, detalles = Integracion.simpson_1_3_multiple(a, b, n, valores_f)
+            elif metodo == 'extrapolacion':
+                n2 = datos.get('n2')
+                valores_f2 = datos.get('valores_f2')
+                
+                if not all([n2 is not None, valores_f2]):
+                    return jsonify({'error': 'Faltan campos para extrapolación'}), 400
+                
+                try:
+                    n2 = int(n2)
+                    valores_f2 = [float(v) for v in valores_f2]
+                except (ValueError, TypeError):
+                    return jsonify({'error': 'Datos inválidos para extrapolación'}), 400
+                
+                resultado, detalles = Integracion.extrapolacion_richardson_integracion(
+                    a, b, n, n2, valores_f, valores_f2
+                )
+            else:
+                return jsonify({'error': 'Método no válido'}), 400
         
         return jsonify({
             'resultado': resultado,

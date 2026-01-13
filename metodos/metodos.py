@@ -1117,6 +1117,80 @@ class Integracion:
         }
         
         return integral, detalles
+    
+    @staticmethod
+    def cuadratura_adaptiva(f_expr: str, a: float, b: float, tolerancia: float = 1e-6, max_profundidad: int = 50) -> Tuple[float, dict]:
+        """
+        Cuadratura Adaptiva (Integración Adaptativa)
+        
+        Utiliza el método Simpson recursivo con división adaptativa de intervalos
+        
+        Args:
+            f_expr: Expresión de la función como string
+            a: Límite inferior
+            b: Límite superior
+            tolerancia: Tolerancia de error deseada
+            max_profundidad: Profundidad máxima de recursión
+        
+        Returns:
+            Tupla (valor_integral, detalles_cálculo)
+        """
+        from sympy import lambdify
+        
+        # Compilar la función
+        x = symbols('x')
+        f_sym = sympify(f_expr.replace('y', 'x'))  # Reemplazar y por x si es necesario
+        f_func = lambdify(x, f_sym, 'numpy')
+        
+        # Función auxiliar para Simpson simple en un intervalo
+        def simpson_simple(a, b, f):
+            c = (a + b) / 2
+            h = (b - a) / 6
+            return h * (f(a) + 4*f(c) + f(b))
+        
+        # Función recursiva para integración adaptativa
+        def adaptativa_recursiva(a, b, tol, profundidad, detalles):
+            if profundidad > max_profundidad:
+                raise ValueError(f"Profundidad máxima de recursión ({max_profundidad}) alcanzada")
+            
+            c = (a + b) / 2
+            
+            # Integrar todo el intervalo
+            I = simpson_simple(a, b, f_func)
+            
+            # Integrar los dos subintervalos
+            I_left = simpson_simple(a, c, f_func)
+            I_right = simpson_simple(c, b, f_func)
+            I_sum = I_left + I_right
+            
+            # Estimar el error
+            error = abs(I_sum - I) / 15  # Factor de error para Simpson
+            
+            # Si el error es menor que la tolerancia, retornar
+            if error < tol or profundidad >= max_profundidad:
+                detalles['evaluaciones'] = detalles.get('evaluaciones', 0) + 4
+                return I_sum
+            
+            # Si no, recursivamente subdividir
+            detalles['evaluaciones'] = detalles.get('evaluaciones', 0) + 4
+            mid_left = adaptativa_recursiva(a, c, tol / 2, profundidad + 1, detalles)
+            mid_right = adaptativa_recursiva(c, b, tol / 2, profundidad + 1, detalles)
+            
+            return mid_left + mid_right
+        
+        detalles = {
+            'metodo': 'Cuadratura Adaptiva (Simpson Adaptativo)',
+            'a': a,
+            'b': b,
+            'f_expr': f_expr,
+            'tolerancia': tolerancia,
+            'evaluaciones': 0
+        }
+        
+        integral = adaptativa_recursiva(a, b, tolerancia, 0, detalles)
+        detalles['integral'] = integral
+        
+        return integral, detalles
 
 
 class SistemasLineales:
