@@ -550,10 +550,14 @@
                 }
 
                 const data = await response.json();
+                if (!data || Object.keys(data).length === 0) {
+                    throw new Error('No se recibieron datos válidos del servidor');
+                }
                 mostrarResultados(data, metodo);
 
             } catch (error) {
-                errorDiv.textContent = '❌ ' + error.message;
+                console.error('Error:', error);
+                errorDiv.textContent = '❌ ' + (error.message || 'Error desconocido');
                 errorDiv.classList.add('show');
                 resultadosDiv.classList.remove('show');
             }
@@ -562,21 +566,40 @@
         function mostrarResultados(datos, metodo) {
             let html = '';
 
+            // Validación básica
+            if (!datos) {
+                html = '<p style="color: red;">Error: No se recibieron datos válidos</p>';
+                resultadosDiv.innerHTML = '<h2>Resultados</h2>' + html;
+                resultadosDiv.classList.add('show');
+                return;
+            }
+
             if (metodo.includes('gaussiana')) {
-                html += '<div class="result-item">';
-                html += '<div class="result-label">Solución:</div>';
-                html += '<div class="result-value">[' + datos.solucion.map(v => v.toFixed(6)).join(', ') + ']</div>';
-                html += '</div>';
+                if (datos.solucion && Array.isArray(datos.solucion)) {
+                    html += '<div class="result-item">';
+                    html += '<div class="result-label">Solución:</div>';
+                    html += '<div class="result-value">[' + datos.solucion.map(v => typeof v === 'number' ? v.toFixed(6) : v).join(', ') + ']</div>';
+                    html += '</div>';
+                } else {
+                    html = '<p style="color: red;">Error: No se pudo obtener la solución</p>';
+                    resultadosDiv.innerHTML = '<h2>Resultados</h2>' + html;
+                    resultadosDiv.classList.add('show');
+                    return;
+                }
 
-                html += '<div class="result-item">';
-                html += '<div class="result-label">Determinante:</div>';
-                html += '<div class="result-value">' + datos.detalles.determinante.toFixed(6) + '</div>';
-                html += '</div>';
+                if (datos.detalles && datos.detalles.determinante !== undefined) {
+                    html += '<div class="result-item">';
+                    html += '<div class="result-label">Determinante:</div>';
+                    html += '<div class="result-value">' + (typeof datos.detalles.determinante === 'number' ? datos.detalles.determinante.toFixed(6) : datos.detalles.determinante) + '</div>';
+                    html += '</div>';
+                }
 
-                html += '<div class="result-item">';
-                html += '<div class="result-label">Número de Condición:</div>';
-                html += '<div class="result-value">' + datos.detalles.numero_condicion.toFixed(6) + '</div>';
-                html += '</div>';
+                if (datos.detalles && datos.detalles.numero_condicion !== undefined) {
+                    html += '<div class="result-item">';
+                    html += '<div class="result-label">Número de Condición:</div>';
+                    html += '<div class="result-value">' + (typeof datos.detalles.numero_condicion === 'number' ? datos.detalles.numero_condicion.toFixed(6) : datos.detalles.numero_condicion) + '</div>';
+                    html += '</div>';
+                }
             } else if (metodo === 'lu') {
                 html += '<div class="result-item">';
                 html += '<div class="result-label">Matriz L:</div>';
@@ -633,7 +656,8 @@
             for (let fila of matriz) {
                 html += '<tr>';
                 for (let val of fila) {
-                    html += '<td>' + val.toFixed(6) + '</td>';
+                    let valStr = typeof val === 'number' ? val.toFixed(6) : (val !== undefined ? val : '0');
+                    html += '<td>' + valStr + '</td>';
                 }
                 html += '</tr>';
             }

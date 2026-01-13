@@ -1218,8 +1218,8 @@ class SistemasLineales:
         # Eliminación hacia adelante
         for k in range(n - 1):
             for i in range(k + 1, n):
-                if M[k, k] == 0:
-                    raise ValueError(f"Elemento pivote cero en posición ({k}, {k})")
+                if abs(M[k, k]) < 1e-10:
+                    raise ValueError(f"Matriz singular o mal condicionada (pivote cercano a cero en posición {k}, {k})")
                 factor = M[i, k] / M[k, k]
                 M[i, k:] = M[i, k:] - factor * M[k, k:]
         
@@ -1230,14 +1230,14 @@ class SistemasLineales:
         
         detalles = {
             'metodo': 'Eliminación Gaussiana Simple',
-            'matriz_original': A.tolist(),
-            'vector_b': b.tolist(),
-            'matriz_escalonada': M[:, :-1].tolist(),
-            'determinante': np.linalg.det(A),
-            'numero_condicion': np.linalg.cond(A)
+            'matriz_original': [[float(val) for val in row] for row in A],
+            'vector_b': [float(val) for val in b],
+            'matriz_escalonada': [[float(val) for val in row] for row in M[:, :-1]],
+            'determinante': float(np.linalg.det(A)),
+            'numero_condicion': float(np.linalg.cond(A))
         }
         
-        return x.tolist(), detalles
+        return [float(val) for val in x], detalles
     
     @staticmethod
     def eliminacion_gaussiana_pivoteo_parcial(A: List[List[float]], b: List[float]) -> Tuple[List[float], dict]:
@@ -1283,11 +1283,11 @@ class SistemasLineales:
         
         detalles = {
             'metodo': 'Eliminación Gaussiana con Pivoteo Parcial',
-            'permutaciones': permutaciones,
-            'matriz_escalonada': M[:, :-1].tolist()
+            'permutaciones': [int(p) for p in permutaciones],
+            'matriz_escalonada': [[float(val) for val in row] for row in M[:, :-1]]
         }
         
-        return x.tolist(), detalles
+        return [float(val) for val in x], detalles
     
     @staticmethod
     def eliminacion_gaussiana_pivoteo_total(A: List[List[float]], b: List[float]) -> Tuple[List[float], dict]:
@@ -1338,11 +1338,11 @@ class SistemasLineales:
         
         detalles = {
             'metodo': 'Eliminación Gaussiana con Pivoteo Total',
-            'permutaciones_filas': perm_filas,
-            'permutaciones_columnas': perm_cols
+            'permutaciones_filas': [int(p) for p in perm_filas],
+            'permutaciones_columnas': [int(p) for p in perm_cols]
         }
         
-        return x_reordenada.tolist(), detalles
+        return [float(val) for val in x_reordenada], detalles
     
     @staticmethod
     def factorizacion_lu(A: List[List[float]]) -> Tuple[List[List[float]], List[List[float]], dict]:
@@ -1366,12 +1366,12 @@ class SistemasLineales:
         
         detalles = {
             'metodo': 'Factorización LU',
-            'matriz_L': L.tolist(),
-            'matriz_U': U.tolist(),
-            'verificacion': np.allclose(np.dot(L, U), A)
+            'matriz_L': [[float(val) for val in row] for row in L],
+            'matriz_U': [[float(val) for val in row] for row in U],
+            'verificacion': bool(np.allclose(np.dot(L, U), A))
         }
         
-        return L.tolist(), U.tolist(), detalles
+        return [[float(val) for val in row] for row in L], [[float(val) for val in row] for row in U], detalles
     
     @staticmethod
     def factorizacion_plu(A: List[List[float]]) -> Tuple[List[List[float]], List[List[float]], List[List[float]], dict]:
@@ -1408,10 +1408,10 @@ class SistemasLineales:
         
         detalles = {
             'metodo': 'Factorización PLU',
-            'verificacion': np.allclose(np.dot(P, np.dot(L, U)), A)
+            'verificacion': bool(np.allclose(np.dot(P, np.dot(L, U)), A))
         }
         
-        return P.tolist(), L.tolist(), U.tolist(), detalles
+        return [[float(val) for val in row] for row in P], [[float(val) for val in row] for row in L], [[float(val) for val in row] for row in U], detalles
     
     @staticmethod
     def factorizacion_llt(A: List[List[float]]) -> Tuple[List[List[float]], dict]:
@@ -1440,11 +1440,11 @@ class SistemasLineales:
         
         detalles = {
             'metodo': 'Factorización LLT (Cholesky)',
-            'matriz_L': L.tolist(),
-            'verificacion': np.allclose(np.dot(L, L.T), A)
+            'matriz_L': [[float(val) for val in row] for row in L],
+            'verificacion': bool(np.allclose(np.dot(L, L.T), A))
         }
         
-        return L.tolist(), detalles
+        return [[float(val) for val in row] for row in L], detalles
 
 
 class EcuacionesDiferenciales:
